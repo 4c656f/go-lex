@@ -113,7 +113,7 @@ func (l *Lexer) Lex() {
 				l.addToken(token)
 				continue
 			}
-			l.onError(NewLexError(l.line, "Unexpected character", string(char)))
+			l.onError(NewLexError(l.line, "Unexpected character:", string(char)))
 		}
 	}
 	l.addToken(token.NewToken(token.EOF, l.line, "", token.NewNullValue()))
