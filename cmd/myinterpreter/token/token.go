@@ -123,16 +123,13 @@ func (v TokenValue) String() string {
 	case NullValue:
 		return "null"
 	case IntValue:
-		return strconv.Itoa(v.valueInt)
+		return strconv.Itoa(v.valueInt) + ".0"
+	case FloatValue:
+		return fmt.Sprintf("%g", v.valueFloat)
 	}
 	return ""
 }
 
 func (t Token) String() string {
-	switch t.Type {
-	case NUMBER:
-		return fmt.Sprint("%s %s %s", t.Type, t.Text, t.Text)
-	default:
-		return fmt.Sprint("%s %s %s", t.Type, t.Text, t.TokenValue.String())
-	}
+	return fmt.Sprintf("%s %s %s", string(t.Type), t.Text, t.TokenValue.String())
 }

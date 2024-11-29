@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"os"
+
+	"github.com/codecrafters-io/interpreter-starter-go/cmd/myinterpreter/lexer"
 )
 
 func main() {
@@ -22,17 +24,18 @@ func main() {
 	}
 
 	// Uncomment this block to pass the first stage
-	
+
 	filename := os.Args[2]
 	fileContents, err := os.ReadFile(filename)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error reading file: %v\n", err)
 		os.Exit(1)
 	}
-	
-	if len(fileContents) > 0 {
-		panic("Scanner not implemented")
-	} else {
-		fmt.Println("EOF  null") // Placeholder, remove this line when implementing the scanner
+	lex := lexer.New(string(fileContents))
+	err = lex.Lex()
+	if err != nil {
+		lexer.Report(err)
+		os.Exit(1)
 	}
+	fmt.Println(lex.String())
 }
