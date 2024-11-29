@@ -19,6 +19,7 @@ type Lexer struct {
 
 func New(src string) *Lexer {
 	return &Lexer{
+		line: 1,
 		source: src,
 	}
 }
