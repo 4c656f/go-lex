@@ -17,5 +17,8 @@ func NewLexError(line int, where string, message string)error{
 }
 
 func (e LexError)Error()string{
-	return fmt.Sprintf("[line %v] Error: %s %s", e.line, e.where, e.message)
+	if e.message == ""{
+		fmt.Sprintf("[line %v] Error: %s", e.line, e.where)
+	}
+	return fmt.Sprintf("[line %v] Error: %s: %s", e.line, e.where, e.message)
 }
