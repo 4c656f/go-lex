@@ -150,7 +150,7 @@ func (l *Lexer) lexString() (*token.Token, error) {
 		l.advance()
 	}
 	if !l.hasNext() {
-		return nil, nil
+		return nil, NewLexError(startLine, "Unterminated string.", "")
 	}
 	l.advance()
 	return token.NewToken(token.STRING, startLine, l.source[l.start:l.end], token.NewStringValue(l.source[l.start+1:l.end-1])), nil

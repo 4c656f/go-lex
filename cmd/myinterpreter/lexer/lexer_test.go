@@ -103,6 +103,14 @@ end`,
 			},
 		},
 		{
+			name:  "unterminated",
+			input: `"foo" "unterminated`,
+			expectedLines: []string{
+				`STRING "foo" foo`,
+				`EOF  null`,
+			},
+		},
+		{
 			name: "strings",
 			input: `""
 "string"`,
