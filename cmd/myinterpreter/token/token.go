@@ -130,6 +130,29 @@ func (v TokenValue) String() string {
 	return ""
 }
 
+var stringToKeywoard = map[string]TokenType{
+	"and":    AND,
+	"class":  CLASS,
+	"else":   ELSE,
+	"false":  FALSE,
+	"for":    FOR,
+	"fun":    FUN,
+	"if":     IF,
+	"nil":    NIL,
+	"or":     OR,
+	"return": RETURN,
+	"super":  SUPER,
+	"this":   THIS,
+	"true":   TRUE,
+	"var":    VAR,
+	"while":  WHILE,
+}
+
+func MatchStringToKeywoard(s string) (TokenType, bool) {
+	t, ok := stringToKeywoard[s]
+	return t, ok
+}
+
 func (t Token) String() string {
 	return fmt.Sprintf("%s %s %s", string(t.Type), t.Text, t.TokenValue.String())
 }

@@ -15,16 +15,17 @@ type Lexer struct {
 	end    int
 	line   int
 	tokens []*token.Token
+	errors []error
 }
 
 func New(src string) *Lexer {
 	return &Lexer{
-		line: 1,
+		line:   1,
 		source: src,
 	}
 }
 
-func (l *Lexer) Lex() error {
+func (l *Lexer) Lex() {
 	for l.hasNext() {
 		char := l.advance()
 		switch char {
@@ -84,7 +85,8 @@ func (l *Lexer) Lex() error {
 		case '"':
 			token, err := l.lexString()
 			if err != nil {
-				return nil
+				l.onError(err)
+				continue
 			}
 			l.addToken(token)
 		case ' ', '\r', '\t':
@@ -94,26 +96,43 @@ func (l *Lexer) Lex() error {
 			l.line++
 		default:
 			if isAlpha(char) {
-				l.lexIdent()
+				token, err := l.lexIdent()
+				if err != nil {
+					l.onError(err)
+					continue
+				}
+				l.addToken(token)
 				continue
 			}
 			if isNumeric(char) {
 				token, err := l.lexNumber()
 				if err != nil {
-					return err
+					l.onError(err)
+					continue
 				}
 				l.addToken(token)
 				continue
 			}
-			return NewLexError(l.line, "Unexpected character", string(char))
+			l.onError(NewLexError(l.line, "Unexpected character", string(char)))
 		}
 	}
 	l.addToken(token.NewToken(token.EOF, l.line, "", token.NewNullValue()))
-	return nil
+
 }
 
 func (l *Lexer) addToken(t *token.Token) {
 	l.tokens = append(l.tokens, t)
+}
+
+func (l *Lexer) onError(err error) {
+	l.errors = append(l.errors, err)
+}
+
+func (l *Lexer) HasErrors() ([]error, bool) {
+	if l.errors == nil {
+		return nil, false
+	}
+	return l.errors, true
 }
 
 func (l *Lexer) lexString() (*token.Token, error) {
@@ -134,7 +153,7 @@ func (l *Lexer) lexString() (*token.Token, error) {
 		return nil, nil
 	}
 	l.advance()
-	return token.NewToken(token.STRING, startLine, l.source[l.start:l.end+1], token.NewStringValue(l.source[l.start+1:l.end])), nil
+	return token.NewToken(token.STRING, startLine, l.source[l.start:l.end], token.NewStringValue(l.source[l.start+1:l.end-1])), nil
 }
 
 func (l *Lexer) lexNumber() (*token.Token, error) {
@@ -160,19 +179,15 @@ func (l *Lexer) lexNumber() (*token.Token, error) {
 
 func (l *Lexer) lexIdent() (*token.Token, error) {
 	l.start = l.end - 1
-	startLine := l.line
-	for l.hasNext() {
-		cur := l.advance()
-		if cur == '\n' {
-			l.line++
-			continue
-		}
-		if cur == '"' {
-			return token.NewToken(token.STRING, startLine, l.source[l.start:l.end+1], token.NewStringValue(l.source[l.start+1:l.end])), nil
-		}
+	for l.hasNext() && isAlpaNumeric(l.peek()) {
+		l.advance()
 	}
-
-	return nil, NewLexError(startLine, "Unterminated string.", "")
+	literal := l.source[l.start:l.end]
+	tokType, ok := token.MatchStringToKeywoard(literal)
+	if !ok {
+		return token.NewToken(token.IDENTIFIER, l.line, literal, token.NewNullValue()), nil
+	}
+	return token.NewToken(tokType, l.line, literal, token.NewNullValue()), nil
 }
 
 func (l Lexer) hasNext() bool {

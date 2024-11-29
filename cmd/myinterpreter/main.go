@@ -32,10 +32,15 @@ func main() {
 		os.Exit(1)
 	}
 	lex := lexer.New(string(fileContents))
-	err = lex.Lex()
-	if err != nil {
-		lexer.Report(err)
-		os.Exit(65)
+	lex.Lex()
+	errs, ok := lex.HasErrors()
+	if ok {
+		for _, err := range errs {
+			lexer.Report(err)
+		}
 	}
 	fmt.Println(lex.String())
+	if ok {
+		os.Exit(65)
+	}
 }
