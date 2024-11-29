@@ -125,6 +125,9 @@ func (v TokenValue) String() string {
 	case IntValue:
 		return strconv.Itoa(v.valueInt) + ".0"
 	case FloatValue:
+		if v.valueFloat == float64(int(v.valueFloat)) {
+			return fmt.Sprintf("%.1f", v.valueFloat)
+		}
 		return fmt.Sprintf("%g", v.valueFloat)
 	}
 	return ""
