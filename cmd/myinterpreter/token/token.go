@@ -149,6 +149,7 @@ var stringToKeywoard = map[string]TokenType{
 	"true":   TRUE,
 	"var":    VAR,
 	"while":  WHILE,
+	"print":  PRINT,
 }
 
 func MatchStringToKeywoard(s string) (TokenType, bool) {
