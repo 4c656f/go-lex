@@ -248,5 +248,5 @@ func isAlpaNumeric(char byte) bool {
 }
 
 func Report(err error) {
-	fmt.Fprint(os.Stderr, err.Error())
+	fmt.Fprintln(os.Stderr, err.Error())
 }
