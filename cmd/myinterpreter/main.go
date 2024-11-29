@@ -35,7 +35,7 @@ func main() {
 	err = lex.Lex()
 	if err != nil {
 		lexer.Report(err)
-		os.Exit(1)
+		os.Exit(65)
 	}
 	fmt.Println(lex.String())
 }
