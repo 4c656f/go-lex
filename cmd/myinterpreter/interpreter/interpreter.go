@@ -18,6 +18,9 @@ func (i *Interpreter) Eval(e expression.Expression) (any, []error) {
 }
 
 func (i Interpreter) String() string {
+	if i.out == nil {
+		return "nil"
+	}
 	return fmt.Sprintf("%v", i.out)
 }
 
