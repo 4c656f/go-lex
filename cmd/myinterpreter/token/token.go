@@ -147,7 +147,7 @@ func (v TokenValue) GetValue() any {
 	case StringValue:
 		return v.valueString
 	case NullValue:
-		return "null"
+		return "nil"
 	case IntValue:
 		return v.valueInt
 	case FloatValue:
