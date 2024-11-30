@@ -22,7 +22,7 @@ func main() {
 	case cli.Parse:
 		parse(arg.FilePath)
 	case cli.Eval:
-		parse(arg.FilePath)
+		eval(arg.FilePath)
 	}
 }
 
@@ -91,9 +91,9 @@ func eval(fileName string) {
 		}
 		os.Exit(70)
 	}
-	i := interpreter.New()
-	_, errs = i.Eval(exp)
-	fmt.Println(i.String())
+	interp := interpreter.New()
+	_, errs = interp.Eval(exp)
+	fmt.Println(interp.String())
 	if errs != nil {
 		for _, err := range errs {
 			lexer.Report(err)
