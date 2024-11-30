@@ -91,3 +91,21 @@ func TestLexParser(t *testing.T) {
 		t.Errorf("TestParser non nil error %v", errs)
 	}
 }
+
+func TestLexNilParser(t *testing.T) {
+	lex := lexer.New("(nil)")
+	lex.Lex()
+	tokens := lex.Tokens()
+	parser := New(tokens)
+	expression, errs := parser.Parse()
+	printer := NewAstPrinter()
+	result := printer.Print(expression)
+	expected := "(group nil)"
+	
+	if result != expected {
+		t.Errorf("TestParser Error, got: %s, want: %s", result, expected)
+	}
+	if errs != nil {
+		t.Errorf("TestParser non nil error %v", errs)
+	}
+}

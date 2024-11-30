@@ -32,7 +32,7 @@ func (a *ASTPrinter) VisitGrouping(g *expression.GroupingExpression) {
 }
 
 func (a *ASTPrinter) VisitLiteral(l *expression.LiteralExpression) {
-	if l.Val.TokenValue.Type == token.BoolValue {
+	if l.Val.TokenValue.Type == token.BoolValue || l.Val.TokenValue.Type == token.NullValue {
 		a.outString = l.Val.Text
 		return
 	}
