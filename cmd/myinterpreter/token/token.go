@@ -62,6 +62,7 @@ type TokenValueType string
 const (
 	StringValue = "string"
 	IntValue    = "int"
+	BoolValue   = "bool"
 	FloatValue  = "float"
 	NullValue   = "null"
 )
@@ -70,6 +71,7 @@ type TokenValue struct {
 	Type        TokenValueType
 	valueInt    int
 	valueString string
+	valueBool   bool
 	valueFloat  float64
 }
 
@@ -93,6 +95,13 @@ func NewIntValue(num int) *TokenValue {
 	return &TokenValue{
 		Type:     IntValue,
 		valueInt: num,
+	}
+}
+
+func NewBoolValue(b bool) *TokenValue {
+	return &TokenValue{
+		Type:      BoolValue,
+		valueBool: b,
 	}
 }
 
@@ -131,6 +140,22 @@ func (v TokenValue) String() string {
 		return fmt.Sprintf("%g", v.valueFloat)
 	}
 	return ""
+}
+
+func (v TokenValue) GetValue() any {
+	switch v.Type {
+	case StringValue:
+		return v.valueString
+	case NullValue:
+		return "null"
+	case IntValue:
+		return v.valueInt
+	case FloatValue:
+		return v.valueFloat
+	case BoolValue:
+		return v.valueBool
+	}
+	return nil
 }
 
 var stringToKeywoard = map[string]TokenType{
