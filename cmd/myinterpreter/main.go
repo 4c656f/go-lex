@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/codecrafters-io/interpreter-starter-go/cmd/myinterpreter/cli"
+	"github.com/codecrafters-io/interpreter-starter-go/cmd/myinterpreter/interpreter"
 	"github.com/codecrafters-io/interpreter-starter-go/cmd/myinterpreter/lexer"
 	"github.com/codecrafters-io/interpreter-starter-go/cmd/myinterpreter/parser"
 )
@@ -19,6 +20,8 @@ func main() {
 	case cli.Tokenize:
 		tokenize(arg.FilePath)
 	case cli.Parse:
+		parse(arg.FilePath)
+	case cli.Eval:
 		parse(arg.FilePath)
 	}
 }
@@ -59,10 +62,42 @@ func parse(fileName string) {
 	exp, errs := par.Parse()
 	printer := parser.NewAstPrinter()
 	fmt.Println(printer.Print(exp))
-	if errs != nil{
+	if errs != nil {
 		for _, err := range errs {
 			lexer.Report(err)
 		}
 		os.Exit(65)
+	}
+}
+
+func eval(fileName string) {
+	fileContents, err := os.ReadFile(fileName)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error reading file: %v\n", err)
+		os.Exit(1)
+	}
+	lex := lexer.New(string(fileContents))
+	errs := lex.Lex()
+	if errs != nil {
+		for _, err := range errs {
+			lexer.Report(err)
+		}
+	}
+	par := parser.New(lex.Tokens())
+	exp, errs := par.Parse()
+	if errs != nil {
+		for _, err := range errs {
+			lexer.Report(err)
+		}
+		os.Exit(70)
+	}
+	i := interpreter.New()
+	_, errs = i.Eval(exp)
+	fmt.Println(i.String())
+	if errs != nil {
+		for _, err := range errs {
+			lexer.Report(err)
+		}
+		os.Exit(70)
 	}
 }

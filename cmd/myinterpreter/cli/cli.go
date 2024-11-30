@@ -7,6 +7,7 @@ type OperationType string
 const (
 	Parse    = "parse"
 	Tokenize = "tokenize"
+	Eval = "evaluate"
 )
 
 type ParsedArgs struct {
