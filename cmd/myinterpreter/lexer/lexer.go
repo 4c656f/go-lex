@@ -25,7 +25,7 @@ func New(src string) *Lexer {
 	}
 }
 
-func (l *Lexer) Lex() {
+func (l *Lexer) Lex() []error {
 	for l.hasNext() {
 		char := l.advance()
 		switch char {
@@ -117,7 +117,7 @@ func (l *Lexer) Lex() {
 		}
 	}
 	l.addToken(token.NewToken(token.EOF, l.line, "", token.NewNullValue()))
-
+	return l.getErrors()
 }
 
 func (l *Lexer) addToken(t *token.Token) {
@@ -128,11 +128,8 @@ func (l *Lexer) onError(err error) {
 	l.errors = append(l.errors, err)
 }
 
-func (l *Lexer) HasErrors() ([]error, bool) {
-	if l.errors == nil {
-		return nil, false
-	}
-	return l.errors, true
+func (l *Lexer) getErrors() []error {
+	return l.errors
 }
 
 func (l *Lexer) lexString() (*token.Token, error) {
@@ -233,6 +230,10 @@ func (l Lexer) String() string {
 		strSlice[i] = t.String()
 	}
 	return strings.Join(strSlice, "\n")
+}
+
+func (l Lexer) Tokens() []*token.Token {
+	return l.tokens
 }
 
 func isAlpha(char byte) bool {

@@ -25,7 +25,7 @@ func TestLexerNumbers(t *testing.T) {
 		},
 		{
 			name:  "keywoards",
-			input: `and class else false for fun if nil or return super this true var while`,
+			input: `and class else false for fun if nil or return super this true var while print`,
 			expectedLines: []string{
 				"AND and null",
 				"CLASS class null",
@@ -42,6 +42,7 @@ func TestLexerNumbers(t *testing.T) {
 				"TRUE true null",
 				"VAR var null",
 				"WHILE while null",
+				"PRINT print null",
 				"EOF  null",
 			},
 		},

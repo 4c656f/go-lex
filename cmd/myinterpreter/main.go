@@ -4,43 +4,65 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/codecrafters-io/interpreter-starter-go/cmd/myinterpreter/cli"
 	"github.com/codecrafters-io/interpreter-starter-go/cmd/myinterpreter/lexer"
+	"github.com/codecrafters-io/interpreter-starter-go/cmd/myinterpreter/parser"
 )
 
 func main() {
-	// You can use print statements as follows for debugging, they'll be visible when running tests.
-	fmt.Fprintln(os.Stderr, "Logs from your program will appear here!")
-
-	if len(os.Args) < 3 {
-		fmt.Fprintln(os.Stderr, "Usage: ./your_program.sh tokenize <filename>")
+	arg, err := cli.ParseArgs()
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err.Error())
 		os.Exit(1)
 	}
-
-	command := os.Args[1]
-
-	if command != "tokenize" {
-		fmt.Fprintf(os.Stderr, "Unknown command: %s\n", command)
-		os.Exit(1)
+	switch arg.Type {
+	case cli.Tokenize:
+		tokenize(arg.FilePath)
+	case cli.Parse:
+		parse(arg.FilePath)
 	}
+}
 
-	// Uncomment this block to pass the first stage
-
-	filename := os.Args[2]
-	fileContents, err := os.ReadFile(filename)
+func tokenize(fileName string) {
+	fileContents, err := os.ReadFile(fileName)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error reading file: %v\n", err)
 		os.Exit(1)
 	}
 	lex := lexer.New(string(fileContents))
-	lex.Lex()
-	errs, ok := lex.HasErrors()
-	if ok {
+	errs := lex.Lex()
+	if errs != nil {
 		for _, err := range errs {
 			lexer.Report(err)
 		}
 	}
 	fmt.Println(lex.String())
-	if ok {
+	if errs != nil {
+		os.Exit(65)
+	}
+}
+
+func parse(fileName string) {
+	fileContents, err := os.ReadFile(fileName)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error reading file: %v\n", err)
+		os.Exit(1)
+	}
+	lex := lexer.New(string(fileContents))
+	errs := lex.Lex()
+	if errs != nil {
+		for _, err := range errs {
+			lexer.Report(err)
+		}
+	}
+	par := parser.New(lex.Tokens())
+	exp, errs := par.Parse()
+	printer := parser.NewAstPrinter()
+	fmt.Println(printer.Print(exp))
+	if errs != nil{
+		for _, err := range errs {
+			lexer.Report(err)
+		}
 		os.Exit(65)
 	}
 }
