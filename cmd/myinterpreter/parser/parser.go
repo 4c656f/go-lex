@@ -74,7 +74,7 @@ func (p *Parser) expression() expression.Expression {
 func (p *Parser) equality() expression.Expression {
 	exp := p.comparison()
 
-	for p.match(token.BANG_EQUAL, token.EQUAL) {
+	for p.match(token.BANG_EQUAL, token.EQUAL_EQUAL) {
 		op := p.prev()
 		rhs := p.comparison()
 		exp = expression.NewBinaryExpression(exp, op, rhs)
