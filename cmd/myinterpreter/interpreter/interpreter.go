@@ -104,7 +104,7 @@ func (i *Interpreter) VisitUnary(u *expression.UnaryExpression) {
 		}
 		return
 	case token.BANG:
-		i.out = token.NewBoolValue(!isTrue(lhs))
+		i.out = !isTrue(lhs)
 		return
 	}
 	i.out = nil
