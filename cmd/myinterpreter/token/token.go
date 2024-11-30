@@ -129,7 +129,7 @@ func (v TokenValue) String() string {
 	switch v.Type {
 	case StringValue:
 		return v.valueString
-	case NullValue:
+	case NullValue, BoolValue:
 		return "null"
 	case IntValue:
 		return strconv.Itoa(v.valueInt) + ".0"

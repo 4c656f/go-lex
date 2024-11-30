@@ -91,6 +91,7 @@ func eval(fileName string) {
 		}
 		os.Exit(70)
 	}
+	fmt.Println(parser.NewAstPrinter().Print(exp))
 	interp := interpreter.New()
 	_, errs = interp.Eval(exp)
 	fmt.Println(interp.String())

@@ -184,6 +184,12 @@ func (l *Lexer) lexIdent() (*token.Token, error) {
 	if !ok {
 		return token.NewToken(token.IDENTIFIER, l.line, literal, token.NewNullValue()), nil
 	}
+	if tokType == token.TRUE {
+		return token.NewToken(token.TRUE, l.line, literal, token.NewBoolValue(true)), nil
+	}
+	if tokType == token.FALSE {
+		return token.NewToken(token.FALSE, l.line, literal, token.NewBoolValue(false)), nil
+	}
 	return token.NewToken(tokType, l.line, literal, token.NewNullValue()), nil
 }
 
