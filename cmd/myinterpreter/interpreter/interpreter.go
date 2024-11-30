@@ -96,9 +96,9 @@ func (i *Interpreter) VisitUnary(u *expression.UnaryExpression) {
 	case token.MINUS:
 		switch v := lhs.(type) {
 		case float64:
-			i.out = token.NewFloatValue(-v)
+			i.out = -v
 		case int:
-			i.out = token.NewIntValue(-v)
+			i.out = -v
 		default:
 			i.onError(NewRuntimeError(u.Op, "Operand must be a number."))
 		}

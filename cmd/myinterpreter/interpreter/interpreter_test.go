@@ -63,3 +63,22 @@ func TestInterpBoolLiteral(t *testing.T) {
 		t.Errorf("TestInterpreter non nil error %v", errs)
 	}
 }
+
+func TestInterpNegIntLiteral(t *testing.T) {
+	lex := lexer.New("-43")
+	lex.Lex()
+	tokens := lex.Tokens()
+	p := parser.New(tokens)
+	expression, errs := p.Parse()
+	interpreter := New()
+	_, errs = interpreter.Eval(expression)
+	result := interpreter.String()
+	fmt.Println(result, parser.NewAstPrinter().Print(expression))
+	expected := "-43"
+	if result != expected {
+		t.Errorf("TestParser Error, got: %s, want: %s", result, expected)
+	}
+	if errs != nil {
+		t.Errorf("TestInterpreter non nil error %v", errs)
+	}
+}
