@@ -12,6 +12,9 @@ type ASTPrinter struct {
 }
 
 func (a *ASTPrinter) Print(expression expression.Expression) string {
+	if expression == nil{
+		return ""
+	}
 	expression.Accept(a)
 	return a.Out()
 }
