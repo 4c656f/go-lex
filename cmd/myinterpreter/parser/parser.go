@@ -29,6 +29,10 @@ func (a *ASTPrinter) VisitGrouping(g *expression.GroupingExpression) {
 }
 
 func (a *ASTPrinter) VisitLiteral(l *expression.LiteralExpression) {
+	if l.Val.TokenValue.Type == token.NullValue {
+		a.outString = l.Val.Text
+		return
+	}
 	a.outString = l.Val.TokenValue.String()
 }
 
@@ -102,7 +106,7 @@ func (p *Parser) term() expression.Expression {
 }
 
 func (p *Parser) factor() expression.Expression {
-	exp := p.factor()
+	exp := p.unary()
 	for p.match(token.SLASH, token.STAR) {
 		op := p.prev()
 		rhs := p.unary()

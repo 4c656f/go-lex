@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/codecrafters-io/interpreter-starter-go/cmd/myinterpreter/expression"
+	"github.com/codecrafters-io/interpreter-starter-go/cmd/myinterpreter/lexer"
 	"github.com/codecrafters-io/interpreter-starter-go/cmd/myinterpreter/token"
 )
 
@@ -57,6 +58,7 @@ func TestParser(t *testing.T) {
 		token.NewToken(token.NUMBER, 1, "1", token.NewIntValue(1)),
 		token.NewToken(token.PLUS, 1, "+", token.NewNullValue()),
 		token.NewToken(token.NUMBER, 1, "1", token.NewIntValue(1)),
+		token.NewToken(token.EOF, 1, "", token.NewNullValue()),
 	}
 	parser := New(tokens)
 	expression, errs := parser.Parse()
@@ -64,6 +66,24 @@ func TestParser(t *testing.T) {
 	result := printer.Print(expression)
 	expected := "(+ 1.0 1.0)"
 
+	if result != expected {
+		t.Errorf("TestParser Error, got: %s, want: %s", result, expected)
+	}
+	if errs != nil {
+		t.Errorf("TestParser non nil error %v", errs)
+	}
+}
+
+func TestLexParser(t *testing.T) {
+	lex := lexer.New("true")
+	lex.Lex()
+	tokens := lex.Tokens()
+	parser := New(tokens)
+	expression, errs := parser.Parse()
+	printer := NewAstPrinter()
+	result := printer.Print(expression)
+	expected := "true"
+	
 	if result != expected {
 		t.Errorf("TestParser Error, got: %s, want: %s", result, expected)
 	}
