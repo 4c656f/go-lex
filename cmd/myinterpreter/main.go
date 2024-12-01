@@ -91,7 +91,7 @@ func eval(fileName string) {
 		for _, err := range errs {
 			lexer.Report(err)
 		}
-		os.Exit(70)
+		os.Exit(65)
 	}
 	interp := interpreter.New()
 	_, errs = interp.Eval(exp)
@@ -124,7 +124,7 @@ func run(fileName string) {
 		for _, err := range errs {
 			lexer.Report(err)
 		}
-		os.Exit(70)
+		os.Exit(65)
 	}
 	interp := interpreter.New()
 	_, errs = interp.Interp(exp)
