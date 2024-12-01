@@ -136,10 +136,10 @@ func (l *Lexer) lexString() (*token.Token, error) {
 	l.start = l.end - 1
 	startLine := l.line
 	for l.hasNext() {
+		
 		cur := l.peek()
 		if cur == '\n' {
 			l.line++
-			continue
 		}
 		if cur == '"' {
 			break

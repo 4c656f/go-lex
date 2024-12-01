@@ -157,7 +157,6 @@ func TestInterpProgram(t *testing.T) {
 	out, _ := io.ReadAll(r)
 	os.Stdout = rescueStdout
 	res := string(out)
-	fmt.Println(res, parser.NewAstPrinter().PrintProgram(expression))
 	fmt.Println(errs)
 	expected := "true\n"
 	if res != expected {
