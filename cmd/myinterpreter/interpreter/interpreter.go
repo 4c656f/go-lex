@@ -51,6 +51,25 @@ func (i *Interpreter) VisitPrintStmt(s *stmt.PrintStmt) {
 	fmt.Println(i.String())
 }
 
+func (i *Interpreter) VisitBlockStmt(s *stmt.BlockStmt) {
+	i.executeBlock(s.Statements, environment.New(i.env))
+}
+
+func (i *Interpreter) executeBlock(stmts []stmt.Stmt, env *environment.Environment) {
+	prevEnv := i.env
+	i.env = env
+
+	for _, s := range stmts {
+		i.exec(s)
+		if i.isErrorOcured(){
+			i.env = prevEnv
+			break
+		}
+	}
+
+	i.env = prevEnv
+}
+
 func (i *Interpreter) VisitVarStmt(s *stmt.VarStmt) {
 	var value any
 	if s.Init != nil {
@@ -184,7 +203,7 @@ func (i *Interpreter) VisitLiteral(u *expression.LiteralExpression) {
 
 func New() *Interpreter {
 	return &Interpreter{
-		env: environment.New(),
+		env: environment.New(nil),
 	}
 }
 

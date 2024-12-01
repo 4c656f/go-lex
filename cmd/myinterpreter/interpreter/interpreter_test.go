@@ -144,7 +144,7 @@ func TestInterpProgram(t *testing.T) {
 	rescueStdout := os.Stdout
 	r, w, _ := os.Pipe()
 	os.Stdout = w
-	
+
 	lex := lexer.New(`print true;`)
 	lex.Lex()
 	tokens := lex.Tokens()
@@ -169,7 +169,7 @@ func TestInterpVarProgram(t *testing.T) {
 	rescueStdout := os.Stdout
 	r, w, _ := os.Pipe()
 	os.Stdout = w
-	
+
 	lex := lexer.New(`
 		var a = 1;
 		var b = 2;
@@ -198,11 +198,42 @@ func TestInterpVarAssProgram(t *testing.T) {
 	rescueStdout := os.Stdout
 	r, w, _ := os.Pipe()
 	os.Stdout = w
-	
+
 	lex := lexer.New(`
 		var a = 1;
 		a = 2;
 		print a;
+`)
+	lex.Lex()
+	tokens := lex.Tokens()
+	p := parser.New(tokens)
+	expression, errs := p.ParseProgram()
+	interpreter := New()
+	_, errs = interpreter.Interp(expression)
+	// demock stdout
+	w.Close()
+	out, _ := io.ReadAll(r)
+	os.Stdout = rescueStdout
+	res := string(out)
+	fmt.Println(errs, expression, parser.NewAstPrinter().PrintProgram(expression))
+	expected := "2\n"
+	if res != expected {
+		t.Errorf("TestParser Error, got: %s, want: %s", res, expected)
+	}
+}
+
+func TestInterpBlockVarProgram(t *testing.T) {
+	// mock stdout
+	rescueStdout := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	lex := lexer.New(`
+		var a = 1;
+		{
+			a = 2
+			print a;
+		}
 `)
 	lex.Lex()
 	tokens := lex.Tokens()

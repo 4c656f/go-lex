@@ -13,6 +13,7 @@ type Visitor interface {
 	VisitExpressionStmt(s *ExpressionStmt)
 	VisitPrintStmt(s *PrintStmt)
 	VisitVarStmt(s *VarStmt)
+	VisitBlockStmt(s *BlockStmt)
 }
 
 type ExpressionStmt struct {
@@ -26,6 +27,14 @@ type PrintStmt struct {
 type VarStmt struct {
 	Name *token.Token
 	Init expression.Expression
+}
+
+type BlockStmt struct {
+	Statements []Stmt
+}
+
+func (s *BlockStmt) Accept(v Visitor) {
+	v.VisitBlockStmt(s)
 }
 
 func (s *ExpressionStmt) Accept(v Visitor) {
@@ -56,5 +65,11 @@ func NewVarStmt(name *token.Token, init expression.Expression) *VarStmt {
 	return &VarStmt{
 		Name: name,
 		Init: init,
+	}
+}
+
+func NewBlockStmt(statements []Stmt) *BlockStmt {
+	return &BlockStmt{
+		Statements: statements,
 	}
 }

@@ -8,6 +8,7 @@ import (
 )
 
 type Environment struct {
+	enclosing *Environment
 	variables map[string]any
 }
 
@@ -18,6 +19,9 @@ func (e *Environment) Define(name string, value any) {
 func (e *Environment) Assign(name *token.Token, value any) error {
 	_, ok := e.variables[name.Text]
 	if !ok {
+		if e.enclosing != nil {
+			return e.enclosing.Assign(name, value)
+		}
 		return errors.NewRuntimeError(name, fmt.Sprintf("Undefined variable '%s'.", name.Text))
 	}
 	e.variables[name.Text] = value
@@ -28,14 +32,18 @@ func (e *Environment) Get(name *token.Token) (any, error) {
 	v, ok := e.variables[name.Text]
 
 	if !ok {
+		if e.enclosing != nil {
+			return e.enclosing.Get(name)
+		}
 		return nil, errors.NewRuntimeError(name, fmt.Sprintf("Undefined variable '%s'.", name.Text))
 	}
 
 	return v, nil
 }
 
-func New() *Environment {
+func New(enclosing *Environment) *Environment {
 	return &Environment{
+		enclosing: enclosing,
 		variables: map[string]any{},
 	}
 }

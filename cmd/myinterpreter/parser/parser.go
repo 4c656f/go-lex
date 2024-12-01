@@ -42,6 +42,15 @@ func (a *ASTPrinter) VisitExpressionStmt(s *stmt.ExpressionStmt) {
 	a.outString = a.parenthesize("stmt", s.Exp)
 }
 
+func (a *ASTPrinter) VisitBlockStmt(s *stmt.BlockStmt) {
+	var inside strings.Builder
+	for _, st := range s.Statements {
+		st.Accept(a)
+		inside.WriteString(a.outString)
+	}
+	a.outString = fmt.Sprintf("{ %s }", inside.String())
+}
+
 func (a *ASTPrinter) VisitPrintStmt(s *stmt.PrintStmt) {
 	a.outString = a.parenthesize("print", s.Exp)
 }
@@ -124,6 +133,9 @@ func (p *Parser) statement() stmt.Stmt {
 	if p.match(token.PRINT) {
 		return p.printStmt()
 	}
+	if p.match(token.LEFT_BRACE) {
+		return p.blockStmt()
+	}
 	return p.expStmt()
 }
 
@@ -155,6 +167,20 @@ func (p *Parser) printStmt() stmt.Stmt {
 		return nil
 	}
 	return stmt.NewPrintStmt(value)
+}
+
+func (p *Parser) blockStmt() stmt.Stmt {
+	statemnts := []stmt.Stmt{}
+
+	for !p.check(token.RIGHT_BRACE) && !p.isAtEnd() {
+		statemnts = append(statemnts, p.declaration())
+	}
+	_, err := p.consume(token.RIGHT_BRACE, "Expect '}' after block.")
+	if err != nil {
+		p.onError(err)
+		return nil
+	}
+	return stmt.NewBlockStmt(statemnts)
 }
 
 func (p *Parser) expStmt() stmt.Stmt {
