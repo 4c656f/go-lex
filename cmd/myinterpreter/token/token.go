@@ -2,7 +2,6 @@ package token
 
 import (
 	"fmt"
-	"strconv"
 )
 
 type TokenType string
@@ -61,18 +60,16 @@ type TokenValueType string
 
 const (
 	StringValue = "string"
-	IntValue    = "int"
+	NumValue    = "num"
 	BoolValue   = "bool"
-	FloatValue  = "float"
 	NullValue   = "null"
 )
 
 type TokenValue struct {
 	Type        TokenValueType
-	valueInt    int
+	valueNum    float64
 	valueString string
 	valueBool   bool
-	valueFloat  float64
 }
 
 type Token struct {
@@ -91,10 +88,10 @@ func NewToken(tType TokenType, line int, text string, value *TokenValue) *Token 
 	}
 }
 
-func NewIntValue(num int) *TokenValue {
+func NewNumValue(num float64) *TokenValue {
 	return &TokenValue{
-		Type:     IntValue,
-		valueInt: num,
+		Type:     NumValue,
+		valueNum: num,
 	}
 }
 
@@ -112,13 +109,6 @@ func NewStringValue(str string) *TokenValue {
 	}
 }
 
-func NewFloatValue(floatNum float64) *TokenValue {
-	return &TokenValue{
-		Type:       FloatValue,
-		valueFloat: floatNum,
-	}
-}
-
 func NewNullValue() *TokenValue {
 	return &TokenValue{
 		Type: NullValue,
@@ -133,13 +123,11 @@ func (v TokenValue) String() string {
 		return "null"
 	case BoolValue:
 		return "null"
-	case IntValue:
-		return strconv.Itoa(v.valueInt) + ".0"
-	case FloatValue:
-		if v.valueFloat == float64(int(v.valueFloat)) {
-			return fmt.Sprintf("%.1f", v.valueFloat)
+	case NumValue:
+		if v.valueNum == float64(int(v.valueNum)) {
+			return fmt.Sprintf("%.1f", v.valueNum)
 		}
-		return fmt.Sprintf("%g", v.valueFloat)
+		return fmt.Sprintf("%g", v.valueNum)
 	}
 	return ""
 }
@@ -150,10 +138,8 @@ func (v TokenValue) GetValue() any {
 		return v.valueString
 	case NullValue:
 		return nil
-	case IntValue:
-		return v.valueInt
-	case FloatValue:
-		return v.valueFloat
+	case NumValue:
+		return v.valueNum
 	case BoolValue:
 		return v.valueBool
 	}

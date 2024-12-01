@@ -166,12 +166,9 @@ func (l *Lexer) lexNumber() (*token.Token, error) {
 		for l.hasNext() && isNumeric(l.peek()) {
 			l.advance()
 		}
-		parsedFloat, err := strconv.ParseFloat(l.source[l.start:l.end], 64)
-		return token.NewToken(token.NUMBER, l.line, l.source[l.start:l.end], token.NewFloatValue(parsedFloat)), err
 	}
-
-	parsedInt, err := strconv.Atoi(l.source[l.start:l.end])
-	return token.NewToken(token.NUMBER, l.line, l.source[l.start:l.end], token.NewIntValue(parsedInt)), err
+	parsedFloat, err := strconv.ParseFloat(l.source[l.start:l.end], 64)
+	return token.NewToken(token.NUMBER, l.line, l.source[l.start:l.end], token.NewNumValue(parsedFloat)), err
 }
 
 func (l *Lexer) lexIdent() (*token.Token, error) {

@@ -11,11 +11,11 @@ import (
 func TestPrinter(t *testing.T) {
 	var exp expression.Expression = expression.NewBinaryExpression(
 		expression.NewLiteralExpression(
-			token.NewToken(token.NUMBER, 1, "100", token.NewIntValue(100)),
+			token.NewToken(token.NUMBER, 1, "100", token.NewNumValue(100)),
 		),
 		token.NewToken(token.PLUS, 1, "+", token.NewNullValue()),
 		expression.NewLiteralExpression(
-			token.NewToken(token.NUMBER, 1, "100", token.NewIntValue(100)),
+			token.NewToken(token.NUMBER, 1, "100", token.NewNumValue(100)),
 		),
 	)
 	printer := NewAstPrinter()
@@ -32,13 +32,13 @@ func TestPrinterComplex(t *testing.T) {
 		expression.NewUnaryExpression(
 			token.NewToken(token.MINUS, 1, "-", token.NewNullValue()),
 			expression.NewLiteralExpression(
-				token.NewToken(token.NUMBER, 1, "123", token.NewIntValue(123)),
+				token.NewToken(token.NUMBER, 1, "123", token.NewNumValue(123)),
 			),
 		),
 		token.NewToken(token.STAR, 1, "*", token.NewNullValue()),
 		expression.NewGroupingExpression(
 			expression.NewLiteralExpression(
-				token.NewToken(token.NUMBER, 1, "45.67", token.NewFloatValue(45.67)),
+				token.NewToken(token.NUMBER, 1, "45.67", token.NewNumValue(45.67)),
 			),
 		),
 	)
@@ -55,9 +55,9 @@ func TestPrinterComplex(t *testing.T) {
 func TestParser(t *testing.T) {
 	// Create the expression: (- 123) * (45.67)
 	tokens := []*token.Token{
-		token.NewToken(token.NUMBER, 1, "1", token.NewIntValue(1)),
+		token.NewToken(token.NUMBER, 1, "1", token.NewNumValue(1)),
 		token.NewToken(token.PLUS, 1, "+", token.NewNullValue()),
-		token.NewToken(token.NUMBER, 1, "1", token.NewIntValue(1)),
+		token.NewToken(token.NUMBER, 1, "1", token.NewNumValue(1)),
 		token.NewToken(token.EOF, 1, "", token.NewNullValue()),
 	}
 	parser := New(tokens)
