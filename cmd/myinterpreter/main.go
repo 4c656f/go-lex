@@ -135,5 +135,4 @@ func run(fileName string) {
 		os.Exit(70)
 		return
 	}
-	fmt.Println(interp.String())
 }
