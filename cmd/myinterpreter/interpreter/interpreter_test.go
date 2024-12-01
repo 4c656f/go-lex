@@ -2,6 +2,8 @@ package interpreter
 
 import (
 	"fmt"
+	"io"
+	"os"
 	"testing"
 
 	"github.com/codecrafters-io/interpreter-starter-go/cmd/myinterpreter/lexer"
@@ -134,5 +136,31 @@ func TestInterpRuntimeErrors(t *testing.T) {
 	fmt.Println(errs)
 	if errs == nil {
 		t.Errorf("TestParser does not had runtime Error, got: %v", errs)
+	}
+}
+
+func TestInterpProgram(t *testing.T) {
+	// mock stdout
+	rescueStdout := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+	
+	lex := lexer.New(`print "hello world";`)
+	lex.Lex()
+	tokens := lex.Tokens()
+	p := parser.New(tokens)
+	expression, errs := p.ParseProgram()
+	interpreter := New()
+	_, errs = interpreter.Interp(expression)
+	// demock stdout
+	w.Close()
+	out, _ := io.ReadAll(r)
+	os.Stdout = rescueStdout
+	res := string(out)
+	fmt.Println(res, parser.NewAstPrinter().PrintProgram(expression))
+	fmt.Println(errs)
+	expected := "hello world\n"
+	if res != expected {
+		t.Errorf("TestParser Error, got: %s, want: %s", res, expected)
 	}
 }

@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/codecrafters-io/interpreter-starter-go/cmd/myinterpreter/expression"
+	"github.com/codecrafters-io/interpreter-starter-go/cmd/myinterpreter/stmt"
 	"github.com/codecrafters-io/interpreter-starter-go/cmd/myinterpreter/token"
 )
 
@@ -12,9 +13,29 @@ type Interpreter struct {
 	errs []error
 }
 
-func (i *Interpreter) Eval(e expression.Expression) (any, []error) {
-	e.Accept(i)
+func (i *Interpreter) Interp(program []stmt.Stmt) (any, []error) {
+	for _, s := range program {
+		i.exec(s)
+	}
 	return i.out, i.errs
+}
+
+func (i *Interpreter) Eval(exp expression.Expression) (any, []error) {
+	exp.Accept(i)
+	return i.out, i.errs
+}
+
+func (i *Interpreter) exec(st stmt.Stmt) {
+	st.Accept(i)
+}
+
+func (i *Interpreter) VisitExpressionStmt(s *stmt.ExpressionStmt) {
+	i.Eval(s.Exp)
+}
+
+func (i *Interpreter) VisitPrintStmt(s *stmt.PrintStmt) {
+	i.Eval(s.Exp)
+	fmt.Println(i.String())
 }
 
 func (i Interpreter) String() string {
@@ -82,14 +103,8 @@ func (i *Interpreter) VisitBinary(b *expression.BinaryExpression) {
 		}
 		i.out = lNum <= rNum
 	case token.EQUAL_EQUAL:
-		// if !isNumeric && !isString {
-		// 	i.onError(NewRuntimeError(b.Op, "Operands must be two numbers or two strings."))
-		// }
 		i.out = rhs == lhs
 	case token.BANG_EQUAL:
-		// if !isNumeric && !isString {
-		// 	i.onError(NewRuntimeError(b.Op, "Operands must be two numbers or two strings."))
-		// }
 		i.out = rhs != lhs
 	}
 

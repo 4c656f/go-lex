@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	"github.com/codecrafters-io/interpreter-starter-go/cmd/myinterpreter/expression"
+	"github.com/codecrafters-io/interpreter-starter-go/cmd/myinterpreter/stmt"
 	"github.com/codecrafters-io/interpreter-starter-go/cmd/myinterpreter/token"
 )
 
@@ -11,16 +12,37 @@ type ASTPrinter struct {
 	outString string
 }
 
-func (a *ASTPrinter) Print(expression expression.Expression) string {
-	if expression == nil{
+func (a *ASTPrinter) PrintProgram(st []stmt.Stmt) string {
+	var b strings.Builder
+	if st == nil {
 		return ""
 	}
-	expression.Accept(a)
+	
+	for _, s := range st{
+		s.Accept(a)
+		b.WriteString(a.Out())
+	}
+	return a.Out()
+}
+
+func (a *ASTPrinter) Print(exp expression.Expression) string {
+	if exp == nil {
+		return ""
+	}
+	exp.Accept(a)
 	return a.Out()
 }
 
 func (a *ASTPrinter) Out() string {
 	return a.outString
+}
+
+func (a *ASTPrinter) VisitExpressionStmt(s *stmt.ExpressionStmt) {
+	a.outString = a.parenthesize("stmt", s.Exp)
+}
+
+func (a *ASTPrinter) VisitPrintStmt(s *stmt.PrintStmt) {
+	a.outString = a.parenthesize("print", s.Exp)
 }
 
 func (a *ASTPrinter) VisitBinary(b *expression.BinaryExpression) {
@@ -68,6 +90,33 @@ type Parser struct {
 
 func (p *Parser) Parse() (expression.Expression, []error) {
 	return p.expression(), p.errors
+}
+
+func (p *Parser) ParseProgram() ([]stmt.Stmt, []error) {
+	statements := []stmt.Stmt{}
+	for !p.isAtEnd() {
+		statements = append(statements, p.statement())
+	}
+	return statements, p.errors
+}
+
+func (p *Parser) statement() stmt.Stmt {
+	if p.match(token.PRINT) {
+		return p.printStmt()
+	}
+	return p.expStmt()
+}
+
+func (p *Parser) printStmt() stmt.Stmt {
+	value := p.expression()
+	p.consume(token.SEMICOLON, "Expect ';' after value.")
+	return stmt.NewPrintStmt(value)
+}
+
+func (p *Parser) expStmt() stmt.Stmt {
+	exp := p.expression()
+	p.consume(token.SEMICOLON, "Expect ';' after value.")
+	return stmt.NewExpressionStmt(exp)
 }
 
 func (p *Parser) expression() expression.Expression {
