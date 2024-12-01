@@ -67,6 +67,18 @@ func (i *Interpreter) VisitVarExpression(s *expression.VarExpression) {
 	i.out = val
 }
 
+func (i *Interpreter) VisitAssignmentExpression(s *expression.AssignmentExpression) {
+	v, errs := i.Eval(s.Val)
+	if errs != nil {
+		return
+	}
+	err := i.env.Assign(s.Name, v)
+	if err != nil {
+		i.onError(err)
+	}
+	i.out = v
+}
+
 func (i Interpreter) String() string {
 	if i.out == nil {
 		return "nil"

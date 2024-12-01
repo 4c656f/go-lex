@@ -8,6 +8,7 @@ type Visitor interface {
 	VisitUnary(u *UnaryExpression)
 	VisitLiteral(u *LiteralExpression)
 	VisitVarExpression(u *VarExpression)
+	VisitAssignmentExpression(u *AssignmentExpression)
 }
 
 type Expression interface {
@@ -37,8 +38,17 @@ type VarExpression struct {
 	Name *token.Token
 }
 
+type AssignmentExpression struct {
+	Name *token.Token
+	Val  Expression
+}
+
 func (this *BinaryExpression) Accept(v Visitor) {
 	v.VisitBinary(this)
+}
+
+func (this *AssignmentExpression) Accept(v Visitor) {
+	v.VisitAssignmentExpression(this)
 }
 
 func (this *GroupingExpression) Accept(v Visitor) {
@@ -92,5 +102,15 @@ func NewVarExpression(
 ) *VarExpression {
 	return &VarExpression{
 		Name: name,
+	}
+}
+
+func NewAssignmentExprExpression(
+	name *token.Token,
+	value Expression,
+) *AssignmentExpression {
+	return &AssignmentExpression{
+		Name:  name,
+		Val: value,
 	}
 }

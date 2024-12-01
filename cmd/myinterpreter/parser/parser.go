@@ -74,6 +74,10 @@ func (a *ASTPrinter) VisitVarExpression(u *expression.VarExpression) {
 	a.outString = fmt.Sprintf("var %s", u.Name.Text)
 }
 
+func (a *ASTPrinter) VisitAssignmentExpression(u *expression.AssignmentExpression) {
+	a.outString = fmt.Sprintf("ass %s", a.parenthesize(u.Name.Text, u.Val))
+}
+
 // Helper function to create parenthesized expressions
 func (a *ASTPrinter) parenthesize(name string, exprs ...expression.Expression) string {
 	var result strings.Builder
@@ -160,7 +164,22 @@ func (p *Parser) expStmt() stmt.Stmt {
 }
 
 func (p *Parser) expression() expression.Expression {
-	return p.equality()
+	return p.assignment()
+}
+
+func (p *Parser) assignment() expression.Expression {
+	exp := p.equality()
+	if p.match(token.EQUAL) {
+		equals := p.prev()
+		value := p.assignment()
+		name, ok := exp.(*expression.VarExpression)
+		if !ok {
+			p.onError(NewParserError(equals, "Invalid assignment target."))
+			return exp
+		}
+		return expression.NewAssignmentExprExpression(name.Name, value)
+	}
+	return exp
 }
 
 func (p *Parser) equality() expression.Expression {
@@ -223,7 +242,7 @@ func (p *Parser) primary() expression.Expression {
 	if p.match(token.IDENTIFIER) {
 		return expression.NewVarExpression(p.prev())
 	}
-	
+
 	if p.match(token.LEFT_PAREN) {
 		exp := p.expression()
 		_, err := p.consume(token.RIGHT_PAREN, "Expect ')' after expression.")
