@@ -120,3 +120,19 @@ func TestInterpDivOp(t *testing.T) {
 		t.Errorf("TestInterpreter non nil error %v", errs)
 	}
 }
+
+func TestInterpRuntimeErrors(t *testing.T) {
+	lex := lexer.New(`-"world"`)
+	lex.Lex()
+	tokens := lex.Tokens()
+	p := parser.New(tokens)
+	expression, errs := p.Parse()
+	interpreter := New()
+	_, errs = interpreter.Eval(expression)
+	result := interpreter.String()
+	fmt.Println(result, parser.NewAstPrinter().Print(expression))
+	fmt.Println(errs)
+	if errs == nil {
+		t.Errorf("TestParser does not had runtime Error, got: %v", errs)
+	}
+}

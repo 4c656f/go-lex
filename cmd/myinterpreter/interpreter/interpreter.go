@@ -101,13 +101,10 @@ func (i *Interpreter) VisitGrouping(g *expression.GroupingExpression) {
 
 func (i *Interpreter) VisitUnary(u *expression.UnaryExpression) {
 	lhs, _ := i.Eval(u.Rhs)
-
 	switch u.Op.Type {
 	case token.MINUS:
 		switch v := lhs.(type) {
 		case float64:
-			i.out = -v
-		case int:
 			i.out = -v
 		default:
 			i.onError(NewRuntimeError(u.Op, "Operand must be a number."))
@@ -120,8 +117,9 @@ func (i *Interpreter) VisitUnary(u *expression.UnaryExpression) {
 	i.out = nil
 }
 
-func (i Interpreter) onError(e error) {
-
+func (i *Interpreter) onError(e error) {
+	i.errs = append(i.errs, e)
+	i.out = nil
 }
 
 func (i *Interpreter) VisitLiteral(u *expression.LiteralExpression) {

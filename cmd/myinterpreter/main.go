@@ -93,11 +93,12 @@ func eval(fileName string) {
 	}
 	interp := interpreter.New()
 	_, errs = interp.Eval(exp)
-	fmt.Println(interp.String())
 	if errs != nil {
 		for _, err := range errs {
 			lexer.Report(err)
 		}
 		os.Exit(70)
+		return
 	}
+	fmt.Println(interp.String())
 }
