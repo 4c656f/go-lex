@@ -28,32 +28,23 @@ func (i *Interpreter) VisitBinary(b *expression.BinaryExpression) {
 	lhs, _ := i.Eval(b.Lhs)
 	rhs, _ := i.Eval(b.Rhs)
 
-	lInt, rInt, isInt := matchOperandsType[int](lhs, rhs)
-	lFloat, rFloat, isFloat := matchOperandsType[float64](lhs, rhs)
+	lNum, rNum, isNumeric := matchOperandsType[float64](lhs, rhs)
 	lStr, rStr, isString := matchOperandsType[string](lhs, rhs)
 	switch b.Op.Type {
 	case token.MINUS:
-		if !isInt && !isFloat {
+		if !isNumeric {
 			i.onError(NewRuntimeError(b.Op, "Operands must be numbers."))
 		}
-		if isInt {
-			i.out = lInt - rInt
-			return
-		}
-		if isFloat {
-			i.out = lFloat - rFloat
+		if isNumeric {
+			i.out = lNum - rNum
 			return
 		}
 	case token.PLUS:
-		if !isInt && !isFloat && !isString {
+		if !isNumeric && !isString {
 			i.onError(NewRuntimeError(b.Op, "Operands must be two numbers or two strings."))
 		}
-		if isInt {
-			i.out = lInt + rInt
-			return
-		}
-		if isFloat {
-			i.out = lFloat + rFloat
+		if isNumeric {
+			i.out = lNum + rNum
 			return
 		}
 		if isString {
@@ -61,29 +52,35 @@ func (i *Interpreter) VisitBinary(b *expression.BinaryExpression) {
 			return
 		}
 	case token.SLASH:
-		if !isInt && !isFloat {
+		if !isNumeric {
 			i.onError(NewRuntimeError(b.Op, "Operands must be numbers."))
 		}
-		if isInt {
-			i.out = lInt / rInt
-			return
-		}
-		if isFloat {
-			i.out = lFloat / rFloat
-			return
-		}
+		i.out = lNum / rNum
 	case token.STAR:
-		if !isInt && !isFloat {
+		if !isNumeric {
 			i.onError(NewRuntimeError(b.Op, "Operands must be numbers."))
 		}
-		if isInt {
-			i.out = lInt * rInt
-			return
+		i.out = lNum * rNum
+	case token.GREATER:
+		if !isNumeric {
+			i.onError(NewRuntimeError(b.Op, "Operands must be numbers."))
 		}
-		if isFloat {
-			i.out = lFloat * rFloat
-			return
+		i.out = lNum > rNum
+	case token.GREATER_EQUAL:
+		if !isNumeric {
+			i.onError(NewRuntimeError(b.Op, "Operands must be numbers."))
 		}
+		i.out = lNum >= rNum
+	case token.LESS:
+		if !isNumeric {
+			i.onError(NewRuntimeError(b.Op, "Operands must be numbers."))
+		}
+		i.out = lNum < rNum
+	case token.LESS_EQUAL:
+		if !isNumeric {
+			i.onError(NewRuntimeError(b.Op, "Operands must be numbers."))
+		}
+		i.out = lNum <= rNum
 	}
 
 }
