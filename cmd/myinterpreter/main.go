@@ -23,6 +23,8 @@ func main() {
 		parse(arg.FilePath)
 	case cli.Eval:
 		eval(arg.FilePath)
+	case cli.Run:
+		run(arg.FilePath)
 	}
 }
 
@@ -93,6 +95,39 @@ func eval(fileName string) {
 	}
 	interp := interpreter.New()
 	_, errs = interp.Eval(exp)
+	if errs != nil {
+		for _, err := range errs {
+			lexer.Report(err)
+		}
+		os.Exit(70)
+		return
+	}
+	fmt.Println(interp.String())
+}
+
+func run(fileName string) {
+	fileContents, err := os.ReadFile(fileName)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error reading file: %v\n", err)
+		os.Exit(1)
+	}
+	lex := lexer.New(string(fileContents))
+	errs := lex.Lex()
+	if errs != nil {
+		for _, err := range errs {
+			lexer.Report(err)
+		}
+	}
+	par := parser.New(lex.Tokens())
+	exp, errs := par.ParseProgram()
+	if errs != nil {
+		for _, err := range errs {
+			lexer.Report(err)
+		}
+		os.Exit(70)
+	}
+	interp := interpreter.New()
+	_, errs = interp.Interp(exp)
 	if errs != nil {
 		for _, err := range errs {
 			lexer.Report(err)

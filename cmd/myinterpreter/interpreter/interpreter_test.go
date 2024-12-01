@@ -145,7 +145,7 @@ func TestInterpProgram(t *testing.T) {
 	r, w, _ := os.Pipe()
 	os.Stdout = w
 	
-	lex := lexer.New(`print "hello world";`)
+	lex := lexer.New(`print true;`)
 	lex.Lex()
 	tokens := lex.Tokens()
 	p := parser.New(tokens)
@@ -159,7 +159,7 @@ func TestInterpProgram(t *testing.T) {
 	res := string(out)
 	fmt.Println(res, parser.NewAstPrinter().PrintProgram(expression))
 	fmt.Println(errs)
-	expected := "hello world\n"
+	expected := "true\n"
 	if res != expected {
 		t.Errorf("TestParser Error, got: %s, want: %s", res, expected)
 	}

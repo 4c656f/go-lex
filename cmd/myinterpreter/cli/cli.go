@@ -8,6 +8,7 @@ const (
 	Parse    = "parse"
 	Tokenize = "tokenize"
 	Eval     = "evaluate"
+	Run      = "run"
 )
 
 type ParsedArgs struct {
