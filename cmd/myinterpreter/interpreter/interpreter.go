@@ -82,14 +82,14 @@ func (i *Interpreter) VisitBinary(b *expression.BinaryExpression) {
 		}
 		i.out = lNum <= rNum
 	case token.EQUAL_EQUAL:
-		if !isNumeric && !isString {
-			i.onError(NewRuntimeError(b.Op, "Operands must be two numbers or two strings."))
-		}
+		// if !isNumeric && !isString {
+		// 	i.onError(NewRuntimeError(b.Op, "Operands must be two numbers or two strings."))
+		// }
 		i.out = rhs == lhs
 	case token.BANG_EQUAL:
-		if !isNumeric && !isString {
-			i.onError(NewRuntimeError(b.Op, "Operands must be two numbers or two strings."))
-		}
+		// if !isNumeric && !isString {
+		// 	i.onError(NewRuntimeError(b.Op, "Operands must be two numbers or two strings."))
+		// }
 		i.out = rhs != lhs
 	}
 
