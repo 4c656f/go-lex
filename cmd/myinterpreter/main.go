@@ -127,7 +127,7 @@ func run(fileName string) {
 		os.Exit(65)
 	}
 	interp := interpreter.New()
-	interp.Interp(exp)
+	_, errs = interp.Interp(exp)
 	if errs != nil {
 		os.Exit(70)
 		return
