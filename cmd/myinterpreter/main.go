@@ -128,11 +128,8 @@ func run(fileName string) {
 	}
 	interp := interpreter.New()
 	interp.Interp(exp)
-	// if errs != nil {
-	// 	for _, err := range errs {
-	// 		lexer.Report(err)
-	// 	}
-	// 	os.Exit(70)
-	// 	return
-	// }
+	if errs != nil {
+		os.Exit(70)
+		return
+	}
 }
