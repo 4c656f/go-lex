@@ -15,6 +15,9 @@ type Interpreter struct {
 
 func (i *Interpreter) Interp(program []stmt.Stmt) (any, []error) {
 	for _, s := range program {
+		if i.errs != nil {
+			break
+		}
 		i.exec(s)
 	}
 	return i.out, i.errs
