@@ -127,12 +127,12 @@ func run(fileName string) {
 		os.Exit(65)
 	}
 	interp := interpreter.New()
-	_, errs = interp.Interp(exp)
-	if errs != nil {
-		for _, err := range errs {
-			lexer.Report(err)
-		}
-		os.Exit(70)
-		return
-	}
+	interp.Interp(exp)
+	// if errs != nil {
+	// 	for _, err := range errs {
+	// 		lexer.Report(err)
+	// 	}
+	// 	os.Exit(70)
+	// 	return
+	// }
 }
