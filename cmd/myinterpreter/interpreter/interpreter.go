@@ -15,12 +15,16 @@ type Interpreter struct {
 
 func (i *Interpreter) Interp(program []stmt.Stmt) (any, []error) {
 	for _, s := range program {
-		if i.errs != nil {
+		if i.isErrorOcured() {
 			break
 		}
 		i.exec(s)
 	}
 	return i.out, i.errs
+}
+
+func (i Interpreter) isErrorOcured() bool {
+	return i.errs != nil
 }
 
 func (i *Interpreter) Eval(exp expression.Expression) (any, []error) {
@@ -38,6 +42,9 @@ func (i *Interpreter) VisitExpressionStmt(s *stmt.ExpressionStmt) {
 
 func (i *Interpreter) VisitPrintStmt(s *stmt.PrintStmt) {
 	i.Eval(s.Exp)
+	if i.isErrorOcured() {
+		return
+	}
 	fmt.Println(i.String())
 }
 
