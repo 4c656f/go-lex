@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/codecrafters-io/interpreter-starter-go/cmd/myinterpreter/expression"
@@ -17,12 +18,12 @@ func (a *ASTPrinter) PrintProgram(st []stmt.Stmt) string {
 	if st == nil {
 		return ""
 	}
-	
-	for _, s := range st{
+
+	for _, s := range st {
 		s.Accept(a)
 		b.WriteString(a.Out())
 	}
-	return a.Out()
+	return b.String()
 }
 
 func (a *ASTPrinter) Print(exp expression.Expression) string {
@@ -45,6 +46,10 @@ func (a *ASTPrinter) VisitPrintStmt(s *stmt.PrintStmt) {
 	a.outString = a.parenthesize("print", s.Exp)
 }
 
+func (a *ASTPrinter) VisitVarStmt(s *stmt.VarStmt) {
+	a.outString = a.parenthesize("var = ", s.Init)
+}
+
 func (a *ASTPrinter) VisitBinary(b *expression.BinaryExpression) {
 	a.outString = a.parenthesize(b.Op.Text, b.Lhs, b.Rhs)
 }
@@ -63,6 +68,10 @@ func (a *ASTPrinter) VisitLiteral(l *expression.LiteralExpression) {
 
 func (a *ASTPrinter) VisitUnary(u *expression.UnaryExpression) {
 	a.outString = a.parenthesize(u.Op.Text, u.Rhs)
+}
+
+func (a *ASTPrinter) VisitVarExpression(u *expression.VarExpression) {
+	a.outString = fmt.Sprintf("var %s", u.Name.Text)
 }
 
 // Helper function to create parenthesized expressions
@@ -95,9 +104,16 @@ func (p *Parser) Parse() (expression.Expression, []error) {
 func (p *Parser) ParseProgram() ([]stmt.Stmt, []error) {
 	statements := []stmt.Stmt{}
 	for !p.isAtEnd() {
-		statements = append(statements, p.statement())
+		statements = append(statements, p.declaration())
 	}
 	return statements, p.errors
+}
+
+func (p *Parser) declaration() stmt.Stmt {
+	if p.match(token.VAR) {
+		return p.varDeclaration()
+	}
+	return p.statement()
 }
 
 func (p *Parser) statement() stmt.Stmt {
@@ -107,9 +123,33 @@ func (p *Parser) statement() stmt.Stmt {
 	return p.expStmt()
 }
 
+func (p *Parser) varDeclaration() stmt.Stmt {
+	name, err := p.consume(token.IDENTIFIER, "Expect variable name.")
+	if err != nil {
+		p.onError(err)
+		return nil
+	}
+	var initializer expression.Expression
+
+	if p.match(token.EQUAL) {
+		initializer = p.expression()
+	}
+	_, err = p.consume(token.SEMICOLON, "Expect ';' after variable declaration.")
+
+	if err != nil {
+		p.onError(err)
+		return nil
+	}
+	return stmt.NewVarStmt(name, initializer)
+}
+
 func (p *Parser) printStmt() stmt.Stmt {
 	value := p.expression()
-	p.consume(token.SEMICOLON, "Expect ';' after value.")
+	_, err := p.consume(token.SEMICOLON, "Expect ';' after value.")
+	if err != nil {
+		p.onError(err)
+		return nil
+	}
 	return stmt.NewPrintStmt(value)
 }
 
@@ -180,7 +220,10 @@ func (p *Parser) primary() expression.Expression {
 	if p.match(token.TRUE, token.FALSE, token.NIL, token.NUMBER, token.STRING) {
 		return expression.NewLiteralExpression(p.prev())
 	}
-
+	if p.match(token.IDENTIFIER) {
+		return expression.NewVarExpression(p.prev())
+	}
+	
 	if p.match(token.LEFT_PAREN) {
 		exp := p.expression()
 		_, err := p.consume(token.RIGHT_PAREN, "Expect ')' after expression.")

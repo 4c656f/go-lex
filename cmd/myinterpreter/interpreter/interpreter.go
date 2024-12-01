@@ -3,12 +3,15 @@ package interpreter
 import (
 	"fmt"
 
+	"github.com/codecrafters-io/interpreter-starter-go/cmd/myinterpreter/environment"
+	"github.com/codecrafters-io/interpreter-starter-go/cmd/myinterpreter/errors"
 	"github.com/codecrafters-io/interpreter-starter-go/cmd/myinterpreter/expression"
 	"github.com/codecrafters-io/interpreter-starter-go/cmd/myinterpreter/stmt"
 	"github.com/codecrafters-io/interpreter-starter-go/cmd/myinterpreter/token"
 )
 
 type Interpreter struct {
+	env  *environment.Environment
 	out  any
 	errs []error
 }
@@ -48,6 +51,22 @@ func (i *Interpreter) VisitPrintStmt(s *stmt.PrintStmt) {
 	fmt.Println(i.String())
 }
 
+func (i *Interpreter) VisitVarStmt(s *stmt.VarStmt) {
+	var value any
+	if s.Init != nil {
+		value, _ = i.Eval(s.Init)
+	}
+	i.env.Define(s.Name.Text, value)
+}
+
+func (i *Interpreter) VisitVarExpression(s *expression.VarExpression) {
+	val, err := i.env.Get(s.Name)
+	if err != nil {
+		i.onError(err)
+	}
+	i.out = val
+}
+
 func (i Interpreter) String() string {
 	if i.out == nil {
 		return "nil"
@@ -64,7 +83,7 @@ func (i *Interpreter) VisitBinary(b *expression.BinaryExpression) {
 	switch b.Op.Type {
 	case token.MINUS:
 		if !isNumeric {
-			i.onError(NewRuntimeError(b.Op, "Operands must be numbers."))
+			i.onError(errors.NewRuntimeError(b.Op, "Operands must be numbers."))
 		}
 		if isNumeric {
 			i.out = lNum - rNum
@@ -72,7 +91,7 @@ func (i *Interpreter) VisitBinary(b *expression.BinaryExpression) {
 		}
 	case token.PLUS:
 		if !isNumeric && !isString {
-			i.onError(NewRuntimeError(b.Op, "Operands must be two numbers or two strings."))
+			i.onError(errors.NewRuntimeError(b.Op, "Operands must be two numbers or two strings."))
 		}
 		if isNumeric {
 			i.out = lNum + rNum
@@ -84,32 +103,32 @@ func (i *Interpreter) VisitBinary(b *expression.BinaryExpression) {
 		}
 	case token.SLASH:
 		if !isNumeric {
-			i.onError(NewRuntimeError(b.Op, "Operands must be numbers."))
+			i.onError(errors.NewRuntimeError(b.Op, "Operands must be numbers."))
 		}
 		i.out = lNum / rNum
 	case token.STAR:
 		if !isNumeric {
-			i.onError(NewRuntimeError(b.Op, "Operands must be numbers."))
+			i.onError(errors.NewRuntimeError(b.Op, "Operands must be numbers."))
 		}
 		i.out = lNum * rNum
 	case token.GREATER:
 		if !isNumeric {
-			i.onError(NewRuntimeError(b.Op, "Operands must be numbers."))
+			i.onError(errors.NewRuntimeError(b.Op, "Operands must be numbers."))
 		}
 		i.out = lNum > rNum
 	case token.GREATER_EQUAL:
 		if !isNumeric {
-			i.onError(NewRuntimeError(b.Op, "Operands must be numbers."))
+			i.onError(errors.NewRuntimeError(b.Op, "Operands must be numbers."))
 		}
 		i.out = lNum >= rNum
 	case token.LESS:
 		if !isNumeric {
-			i.onError(NewRuntimeError(b.Op, "Operands must be numbers."))
+			i.onError(errors.NewRuntimeError(b.Op, "Operands must be numbers."))
 		}
 		i.out = lNum < rNum
 	case token.LESS_EQUAL:
 		if !isNumeric {
-			i.onError(NewRuntimeError(b.Op, "Operands must be numbers."))
+			i.onError(errors.NewRuntimeError(b.Op, "Operands must be numbers."))
 		}
 		i.out = lNum <= rNum
 	case token.EQUAL_EQUAL:
@@ -132,7 +151,7 @@ func (i *Interpreter) VisitUnary(u *expression.UnaryExpression) {
 		case float64:
 			i.out = -v
 		default:
-			i.onError(NewRuntimeError(u.Op, "Operand must be a number."))
+			i.onError(errors.NewRuntimeError(u.Op, "Operand must be a number."))
 		}
 		return
 	case token.BANG:
@@ -152,7 +171,9 @@ func (i *Interpreter) VisitLiteral(u *expression.LiteralExpression) {
 }
 
 func New() *Interpreter {
-	return &Interpreter{}
+	return &Interpreter{
+		env: environment.New(),
+	}
 }
 
 func matchOperandsType[V int | float64 | string](lhs any, rhs any) (V, V, bool) {
