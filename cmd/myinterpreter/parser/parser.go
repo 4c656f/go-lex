@@ -55,6 +55,11 @@ func (a *ASTPrinter) VisitPrintStmt(s *stmt.PrintStmt) {
 	a.outString = a.parenthesize("print", s.Exp)
 }
 
+func (a *ASTPrinter) VisitIfStmt(s *stmt.IfStmt) {
+	s.ThenBranch.Accept(a)
+	a.outString = fmt.Sprintf("%s, {\n%s\n}", a.parenthesize("if", s.Condition), a.Out())
+}
+
 func (a *ASTPrinter) VisitVarStmt(s *stmt.VarStmt) {
 	a.outString = a.parenthesize("var = ", s.Init)
 }
@@ -130,6 +135,9 @@ func (p *Parser) declaration() stmt.Stmt {
 }
 
 func (p *Parser) statement() stmt.Stmt {
+	if p.match(token.IF) {
+		return p.ifStmt()
+	}
 	if p.match(token.PRINT) {
 		return p.printStmt()
 	}
@@ -137,6 +145,26 @@ func (p *Parser) statement() stmt.Stmt {
 		return p.blockStmt()
 	}
 	return p.expStmt()
+}
+
+func (p *Parser) ifStmt() stmt.Stmt {
+	_, err := p.consume(token.LEFT_PAREN, "Expect '(' after 'if'.")
+	if err != nil {
+		p.onError(err)
+		return nil
+	}
+	condition := p.expression()
+	_, err = p.consume(token.RIGHT_PAREN, "Expect ')' after if condition.")
+	if err != nil {
+		p.onError(err)
+		return nil
+	}
+	flow := p.statement()
+	var elseStmt stmt.Stmt
+	if p.match(token.ELSE) {
+		elseStmt = p.statement()
+	}
+	return stmt.NewIfStmt(condition, flow, elseStmt)
 }
 
 func (p *Parser) varDeclaration() stmt.Stmt {

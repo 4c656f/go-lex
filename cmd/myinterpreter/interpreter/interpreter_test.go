@@ -252,3 +252,37 @@ func TestInterpBlockVarProgram(t *testing.T) {
 		t.Errorf("TestParser Error, got: %s, want: %s", res, expected)
 	}
 }
+
+func TestInterpIfProgram(t *testing.T) {
+	// mock stdout
+	rescueStdout := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	lex := lexer.New(`
+		var truth = true;
+		if (truth) 
+			print "if";
+		
+		if (!truth)
+			print "if";
+		else print "else";
+		
+`)
+	lex.Lex()
+	tokens := lex.Tokens()
+	p := parser.New(tokens)
+	expression, errs := p.ParseProgram()
+	interpreter := New()
+	_, errs = interpreter.Interp(expression)
+	// demock stdout
+	w.Close()
+	out, _ := io.ReadAll(r)
+	os.Stdout = rescueStdout
+	res := string(out)
+	fmt.Println(errs, expression, parser.NewAstPrinter().PrintProgram(expression))
+	expected := "if\nelse\n"
+	if res != expected {
+		t.Errorf("TestParser Error, got: %s, want: %s", res, expected)
+	}
+}

@@ -9,6 +9,8 @@ type Visitor interface {
 	VisitLiteral(u *LiteralExpression)
 	VisitVarExpression(u *VarExpression)
 	VisitAssignmentExpression(u *AssignmentExpression)
+	VisitOrExpression(u *OrExpression)
+	VisitAndExpression(u *AndExpression)
 }
 
 type Expression interface {
@@ -43,6 +45,16 @@ type AssignmentExpression struct {
 	Val  Expression
 }
 
+type OrExpression struct {
+	Lhs Expression
+	Rhs Expression
+}
+
+type AndExpression struct {
+	Lhs Expression
+	Rhs Expression
+}
+
 func (this *BinaryExpression) Accept(v Visitor) {
 	v.VisitBinary(this)
 }
@@ -65,6 +77,14 @@ func (this *UnaryExpression) Accept(v Visitor) {
 
 func (this *VarExpression) Accept(v Visitor) {
 	v.VisitVarExpression(this)
+}
+
+func (this *OrExpression) Accept(v Visitor) {
+	v.VisitOrExpression(this)
+}
+
+func (this *AndExpression) Accept(v Visitor) {
+	v.VisitAndExpression(this)
 }
 
 func NewBinaryExpression(
@@ -110,7 +130,27 @@ func NewAssignmentExprExpression(
 	value Expression,
 ) *AssignmentExpression {
 	return &AssignmentExpression{
-		Name:  name,
-		Val: value,
+		Name: name,
+		Val:  value,
+	}
+}
+
+func NewOrExpression(
+	lhs Expression,
+	rhs Expression,
+) *OrExpression {
+	return &OrExpression{
+		Lhs: lhs,
+		Rhs: rhs,
+	}
+}
+
+func NewAndExpression(
+	lhs Expression,
+	rhs Expression,
+) *AndExpression {
+	return &AndExpression{
+		Lhs: lhs,
+		Rhs: rhs,
 	}
 }

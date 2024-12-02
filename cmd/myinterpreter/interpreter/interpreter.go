@@ -39,6 +39,17 @@ func (i *Interpreter) exec(st stmt.Stmt) {
 	st.Accept(i)
 }
 
+func (i *Interpreter) VisitIfStmt(s *stmt.IfStmt) {
+	cond, _ := i.Eval(s.Condition)
+	if isTrue(cond) {
+		i.exec(s.ThenBranch)
+		return
+	}
+	if s.ElseBranch != nil {
+		i.exec(s.ElseBranch)
+	}
+}
+
 func (i *Interpreter) VisitExpressionStmt(s *stmt.ExpressionStmt) {
 	i.Eval(s.Exp)
 }
@@ -61,7 +72,7 @@ func (i *Interpreter) executeBlock(stmts []stmt.Stmt, env *environment.Environme
 
 	for _, s := range stmts {
 		i.exec(s)
-		if i.isErrorOcured(){
+		if i.isErrorOcured() {
 			i.env = prevEnv
 			break
 		}

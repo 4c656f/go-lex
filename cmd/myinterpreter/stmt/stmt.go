@@ -14,6 +14,7 @@ type Visitor interface {
 	VisitPrintStmt(s *PrintStmt)
 	VisitVarStmt(s *VarStmt)
 	VisitBlockStmt(s *BlockStmt)
+	VisitIfStmt(s *IfStmt)
 }
 
 type ExpressionStmt struct {
@@ -33,6 +34,12 @@ type BlockStmt struct {
 	Statements []Stmt
 }
 
+type IfStmt struct {
+	Condition  expression.Expression
+	ThenBranch Stmt
+	ElseBranch Stmt
+}
+
 func (s *BlockStmt) Accept(v Visitor) {
 	v.VisitBlockStmt(s)
 }
@@ -47,6 +54,10 @@ func (s *PrintStmt) Accept(v Visitor) {
 
 func (s *VarStmt) Accept(v Visitor) {
 	v.VisitVarStmt(s)
+}
+
+func (s *IfStmt) Accept(v Visitor) {
+	v.VisitIfStmt(s)
 }
 
 func NewExpressionStmt(exp expression.Expression) *ExpressionStmt {
@@ -71,5 +82,15 @@ func NewVarStmt(name *token.Token, init expression.Expression) *VarStmt {
 func NewBlockStmt(statements []Stmt) *BlockStmt {
 	return &BlockStmt{
 		Statements: statements,
+	}
+}
+
+func NewIfStmt(Condition expression.Expression,
+	ThenBranch Stmt,
+	ElseBranch Stmt) *IfStmt {
+	return &IfStmt{
+		Condition:  Condition,
+		ThenBranch: ThenBranch,
+		ElseBranch: ElseBranch,
 	}
 }
