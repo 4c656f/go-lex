@@ -50,6 +50,16 @@ func (i *Interpreter) VisitIfStmt(s *stmt.IfStmt) {
 	}
 }
 
+func (i *Interpreter) VisitWhileStmt(s *stmt.WhileStmt) {
+	for {
+		v ,_ := i.Eval(s.Condition)
+		if !isTrue(v){
+			break
+		}
+		i.exec(s.Body)
+	}
+}
+
 func (i *Interpreter) VisitExpressionStmt(s *stmt.ExpressionStmt) {
 	i.Eval(s.Exp)
 }
@@ -107,6 +117,25 @@ func (i *Interpreter) VisitAssignmentExpression(s *expression.AssignmentExpressi
 		i.onError(err)
 	}
 	i.out = v
+}
+
+func (i *Interpreter) VisitLogicalExpression(s *expression.LogicalExpression) {
+	left, _ := i.Eval(s.Lhs)
+
+	if s.Op.Type == token.OR {
+		if isTrue(left) {
+			i.out = left
+			return
+		}
+	}
+	if s.Op.Type == token.AND {
+		if isTrue(left) {
+			i.out = left
+			return
+		}
+	}
+
+	i.Eval(s.Rhs)
 }
 
 func (i Interpreter) String() string {

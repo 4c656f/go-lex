@@ -15,6 +15,7 @@ type Visitor interface {
 	VisitVarStmt(s *VarStmt)
 	VisitBlockStmt(s *BlockStmt)
 	VisitIfStmt(s *IfStmt)
+	VisitWhileStmt(s *WhileStmt)
 }
 
 type ExpressionStmt struct {
@@ -38,6 +39,15 @@ type IfStmt struct {
 	Condition  expression.Expression
 	ThenBranch Stmt
 	ElseBranch Stmt
+}
+
+type WhileStmt struct {
+	Condition expression.Expression
+	Body      Stmt
+}
+
+func (s *WhileStmt) Accept(v Visitor) {
+	v.VisitWhileStmt(s)
 }
 
 func (s *BlockStmt) Accept(v Visitor) {
@@ -92,5 +102,12 @@ func NewIfStmt(Condition expression.Expression,
 		Condition:  Condition,
 		ThenBranch: ThenBranch,
 		ElseBranch: ElseBranch,
+	}
+}
+
+func NewWhileStmt(condition expression.Expression, body Stmt) *WhileStmt {
+	return &WhileStmt{
+		Condition: condition,
+		Body:      body,
 	}
 }

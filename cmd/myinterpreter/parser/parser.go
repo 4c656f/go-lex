@@ -92,6 +92,15 @@ func (a *ASTPrinter) VisitAssignmentExpression(u *expression.AssignmentExpressio
 	a.outString = fmt.Sprintf("ass %s", a.parenthesize(u.Name.Text, u.Val))
 }
 
+func (a *ASTPrinter) VisitLogicalExpression(u *expression.LogicalExpression) {
+	a.outString = a.parenthesize(u.Op.Text, u.Lhs, u.Rhs)
+}
+
+func (a *ASTPrinter) VisitWhileStmt(s *stmt.WhileStmt) {
+	s.Body.Accept(a)
+	a.outString = fmt.Sprintf("%s, {\n%s\n}", a.parenthesize("while", s.Condition), a.Out())
+}
+
 // Helper function to create parenthesized expressions
 func (a *ASTPrinter) parenthesize(name string, exprs ...expression.Expression) string {
 	var result strings.Builder
@@ -138,6 +147,12 @@ func (p *Parser) statement() stmt.Stmt {
 	if p.match(token.IF) {
 		return p.ifStmt()
 	}
+	if p.match(token.WHILE) {
+		return p.whileStmt()
+	}
+	if p.match(token.FOR) {
+		return p.forStmt()
+	}
 	if p.match(token.PRINT) {
 		return p.printStmt()
 	}
@@ -147,16 +162,81 @@ func (p *Parser) statement() stmt.Stmt {
 	return p.expStmt()
 }
 
+func (p *Parser) whileStmt() stmt.Stmt {
+	_, err := p.consume(token.LEFT_PAREN, "Expect '(' after 'while'.")
+	if err != nil {
+		return nil
+	}
+	condition := p.expression()
+	_, err = p.consume(token.RIGHT_PAREN, "Expect ')' after condition.")
+	if err != nil {
+		return nil
+	}
+	body := p.statement()
+	return stmt.NewWhileStmt(condition, body)
+}
+
+func (p *Parser) forStmt() stmt.Stmt {
+	_, err := p.consume(token.LEFT_PAREN, "Expect '(' after 'for'.")
+	if err != nil {
+		return nil
+	}
+	var initializer stmt.Stmt
+	var condition expression.Expression
+	var incriment expression.Expression
+	if p.match(token.SEMICOLON) {
+
+	} else if p.match(token.VAR) {
+		initializer = p.varDeclaration()
+	} else {
+		initializer = p.expStmt()
+	}
+
+	if !p.check(token.SEMICOLON) {
+		condition = p.expression()
+	}
+	_, err = p.consume(token.SEMICOLON, "Expect ';' after loop condition.")
+	if err != nil {
+		return nil
+	}
+
+	if !p.check(token.RIGHT_PAREN) {
+		incriment = p.expression()
+	}
+	_, err = p.consume(token.RIGHT_PAREN, "Expect ')' after for clauses.")
+	if err != nil {
+		return nil
+	}
+	body := p.statement()
+
+	if incriment != nil {
+		body = stmt.NewBlockStmt([]stmt.Stmt{
+			body,
+			stmt.NewExpressionStmt(incriment),
+		})
+	}
+
+	if condition == nil {
+		condition = expression.NewLiteralExpression(token.NewToken(token.BoolValue, 1, "true", token.NewBoolValue(true)))
+	}
+	body = stmt.NewWhileStmt(condition, body)
+	if initializer != nil {
+		body = stmt.NewBlockStmt([]stmt.Stmt{
+			initializer,
+			body,
+		})
+	}
+	return body
+}
+
 func (p *Parser) ifStmt() stmt.Stmt {
 	_, err := p.consume(token.LEFT_PAREN, "Expect '(' after 'if'.")
 	if err != nil {
-		p.onError(err)
 		return nil
 	}
 	condition := p.expression()
 	_, err = p.consume(token.RIGHT_PAREN, "Expect ')' after if condition.")
 	if err != nil {
-		p.onError(err)
 		return nil
 	}
 	flow := p.statement()
@@ -170,7 +250,6 @@ func (p *Parser) ifStmt() stmt.Stmt {
 func (p *Parser) varDeclaration() stmt.Stmt {
 	name, err := p.consume(token.IDENTIFIER, "Expect variable name.")
 	if err != nil {
-		p.onError(err)
 		return nil
 	}
 	var initializer expression.Expression
@@ -179,9 +258,7 @@ func (p *Parser) varDeclaration() stmt.Stmt {
 		initializer = p.expression()
 	}
 	_, err = p.consume(token.SEMICOLON, "Expect ';' after variable declaration.")
-
 	if err != nil {
-		p.onError(err)
 		return nil
 	}
 	return stmt.NewVarStmt(name, initializer)
@@ -191,7 +268,6 @@ func (p *Parser) printStmt() stmt.Stmt {
 	value := p.expression()
 	_, err := p.consume(token.SEMICOLON, "Expect ';' after value.")
 	if err != nil {
-		p.onError(err)
 		return nil
 	}
 	return stmt.NewPrintStmt(value)
@@ -205,7 +281,6 @@ func (p *Parser) blockStmt() stmt.Stmt {
 	}
 	_, err := p.consume(token.RIGHT_BRACE, "Expect '}' after block.")
 	if err != nil {
-		p.onError(err)
 		return nil
 	}
 	return stmt.NewBlockStmt(statemnts)
@@ -213,7 +288,10 @@ func (p *Parser) blockStmt() stmt.Stmt {
 
 func (p *Parser) expStmt() stmt.Stmt {
 	exp := p.expression()
-	p.consume(token.SEMICOLON, "Expect ';' after value.")
+	_, err := p.consume(token.SEMICOLON, "Expect ';' after value.")
+	if err != nil {
+		return nil
+	}
 	return stmt.NewExpressionStmt(exp)
 }
 
@@ -222,7 +300,7 @@ func (p *Parser) expression() expression.Expression {
 }
 
 func (p *Parser) assignment() expression.Expression {
-	exp := p.equality()
+	exp := p.logicalOr()
 	if p.match(token.EQUAL) {
 		equals := p.prev()
 		value := p.assignment()
@@ -233,6 +311,29 @@ func (p *Parser) assignment() expression.Expression {
 		}
 		return expression.NewAssignmentExprExpression(name.Name, value)
 	}
+	return exp
+}
+
+func (p *Parser) logicalOr() expression.Expression {
+	exp := p.logicalAnd()
+
+	for p.match(token.OR) {
+		op := p.prev()
+		rhs := p.logicalAnd()
+		exp = expression.NewLogicalExpression(exp, op, rhs)
+	}
+	return exp
+}
+
+func (p *Parser) logicalAnd() expression.Expression {
+	exp := p.equality()
+
+	for p.match(token.AND) {
+		op := p.prev()
+		rhs := p.equality()
+		exp = expression.NewLogicalExpression(exp, op, rhs)
+	}
+
 	return exp
 }
 
@@ -301,7 +402,6 @@ func (p *Parser) primary() expression.Expression {
 		exp := p.expression()
 		_, err := p.consume(token.RIGHT_PAREN, "Expect ')' after expression.")
 		if err != nil {
-			p.onError(err)
 			return nil
 		}
 		return expression.NewGroupingExpression(exp)
@@ -314,7 +414,9 @@ func (p *Parser) consume(t token.TokenType, message string) (*token.Token, error
 	if p.check(t) {
 		return p.advance(), nil
 	}
-	return nil, NewParserError(p.peek(), message)
+	err := NewParserError(p.peek(), message)
+	p.onError(err)
+	return nil, err
 }
 
 func (p *Parser) onError(err error) {
