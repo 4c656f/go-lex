@@ -129,7 +129,7 @@ func (i *Interpreter) VisitLogicalExpression(s *expression.LogicalExpression) {
 		}
 	}
 	if s.Op.Type == token.AND {
-		if isTrue(left) {
+		if !isTrue(left) {
 			i.out = left
 			return
 		}
