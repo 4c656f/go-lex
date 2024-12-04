@@ -130,7 +130,9 @@ func (i *Interpreter) executeBlock(stmts []stmt.Stmt, env *environment.Environme
 			break
 		}
 	}
-
+	if !i.isReturnCallOccured(){
+		i.out = nil
+	}
 	i.env = prevEnv
 }
 

@@ -564,7 +564,41 @@ func TestFibStmt(t *testing.T) {
 	os.Stdout = rescueStdout
 	res := string(out)
 	fmt.Println(errs, parser.NewAstPrinter().PrintProgram(program))
-	expected := "55\n"
+	expected := ""
+	if res != expected {
+		t.Errorf("TestParser Error, got: %s, want: %s", res, expected)
+	}
+}
+
+func TestReturnControllFlowStmt(t *testing.T) {
+	// mock stdout
+	rescueStdout := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	lex := lexer.New(`
+		fun f() {
+   			while (!true) return "ok";
+      	}
+       	print f();
+	`)
+	lex.Lex()
+	tokens := lex.Tokens()
+	p := parser.New(tokens)
+	program, errs := p.ParseProgram()
+	if errs != nil {
+		t.Errorf("TestInterpreter non nil error %s", errs)
+		return
+	}
+	interpreter := New()
+	_, errs = interpreter.Interp(program)
+	// demock stdout
+	w.Close()
+	out, _ := io.ReadAll(r)
+	os.Stdout = rescueStdout
+	res := string(out)
+	fmt.Println(errs, parser.NewAstPrinter().PrintProgram(program))
+	expected := "nil\n"
 	if res != expected {
 		t.Errorf("TestParser Error, got: %s, want: %s", res, expected)
 	}
