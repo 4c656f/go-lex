@@ -340,7 +340,7 @@ type NativeClock struct {
 }
 
 func (c *NativeClock) Call(interp *Interpreter, args []any) any {
-	return float64(time.Now().UnixMilli())
+	return float64(time.Now().Unix())
 }
 
 func (c NativeClock) Arity() int {
