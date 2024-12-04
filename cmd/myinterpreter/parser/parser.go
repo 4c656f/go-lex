@@ -55,6 +55,10 @@ func (a *ASTPrinter) VisitPrintStmt(s *stmt.PrintStmt) {
 	a.outString = a.parenthesize("print", s.Exp)
 }
 
+func (a *ASTPrinter) VisitReturnStmt(s *stmt.ReturnStmt) {
+	a.outString = a.parenthesize("return", s.Exp)
+}
+
 func (a *ASTPrinter) VisitIfStmt(s *stmt.IfStmt) {
 	s.ThenBranch.Accept(a)
 	a.outString = fmt.Sprintf("%s, {\n%s\n}", a.parenthesize("if", s.Condition), a.Out())
@@ -101,6 +105,18 @@ func (a *ASTPrinter) VisitWhileStmt(s *stmt.WhileStmt) {
 	a.outString = fmt.Sprintf("%s, {\n%s\n}", a.parenthesize("while", s.Condition), a.Out())
 }
 
+func (a *ASTPrinter) VisitFunctionCallExpression(f *expression.FunctionCallExpression) {
+	var args []expression.Expression
+	args = append(args, f.Callee)
+	args = append(args, f.Args...)
+	a.outString = a.parenthesize("call", args...)
+}
+
+func (a *ASTPrinter) VisitFunctionDeclarationStmt(f *stmt.FunctionDeclarationStmt) {
+	a.VisitBlockStmt(stmt.NewBlockStmt(f.Body))
+	a.outString = fmt.Sprintf("fun %s () %s", f.Name.Text, a.Out())
+}
+
 // Helper function to create parenthesized expressions
 func (a *ASTPrinter) parenthesize(name string, exprs ...expression.Expression) string {
 	var result strings.Builder
@@ -137,6 +153,9 @@ func (p *Parser) ParseProgram() ([]stmt.Stmt, []error) {
 }
 
 func (p *Parser) declaration() stmt.Stmt {
+	if p.match(token.FUN) {
+		return p.functionDeclaration()
+	}
 	if p.match(token.VAR) {
 		return p.varDeclaration()
 	}
@@ -157,9 +176,25 @@ func (p *Parser) statement() stmt.Stmt {
 		return p.printStmt()
 	}
 	if p.match(token.LEFT_BRACE) {
-		return p.blockStmt()
+		return stmt.NewBlockStmt(p.blockStmt())
+	}
+	if p.match(token.RETURN) {
+		return p.returnStmt()
 	}
 	return p.expStmt()
+}
+
+func (p *Parser) returnStmt() stmt.Stmt {
+	keywoard := p.prev()
+	var exp expression.Expression
+	if !p.check(token.SEMICOLON) {
+		exp = p.expression()
+	}
+	_, err := p.consume(token.SEMICOLON, "Expect ';' after return value.")
+	if err != nil {
+		return nil
+	}
+	return stmt.NewReturnStmt(keywoard, exp)
 }
 
 func (p *Parser) whileStmt() stmt.Stmt {
@@ -247,6 +282,42 @@ func (p *Parser) ifStmt() stmt.Stmt {
 	return stmt.NewIfStmt(condition, flow, elseStmt)
 }
 
+func (p *Parser) functionDeclaration() stmt.Stmt {
+	name, err := p.consume(token.IDENTIFIER, "Expect function name.")
+	if err != nil {
+		return nil
+	}
+	_, err = p.consume(token.LEFT_PAREN, "Expect ( after function name.")
+	if err != nil {
+		return nil
+	}
+	args := []*token.Token{}
+	for !p.check(token.RIGHT_PAREN) {
+		arg, err := p.consume(token.IDENTIFIER, "Expect parameter name.")
+		if err != nil {
+			return nil
+		}
+		if len(args) >= 255 {
+			p.onError(NewParserError(arg, "Can't have more than 255 parameters."))
+			break
+		}
+		args = append(args, arg)
+		if !p.match(token.COMMA) {
+			break
+		}
+	}
+	_, err = p.consume(token.RIGHT_PAREN, "Expect ) after function name.")
+	if err != nil {
+		return nil
+	}
+	_, err = p.consume(token.LEFT_BRACE, "Expect { after function body.")
+	if err != nil {
+		return nil
+	}
+	body := p.blockStmt()
+	return stmt.NewFunctionDeclarationStmt(name, body, args)
+}
+
 func (p *Parser) varDeclaration() stmt.Stmt {
 	name, err := p.consume(token.IDENTIFIER, "Expect variable name.")
 	if err != nil {
@@ -273,7 +344,7 @@ func (p *Parser) printStmt() stmt.Stmt {
 	return stmt.NewPrintStmt(value)
 }
 
-func (p *Parser) blockStmt() stmt.Stmt {
+func (p *Parser) blockStmt() []stmt.Stmt {
 	statemnts := []stmt.Stmt{}
 
 	for !p.check(token.RIGHT_BRACE) && !p.isAtEnd() {
@@ -283,7 +354,7 @@ func (p *Parser) blockStmt() stmt.Stmt {
 	if err != nil {
 		return nil
 	}
-	return stmt.NewBlockStmt(statemnts)
+	return statemnts
 }
 
 func (p *Parser) expStmt() stmt.Stmt {
@@ -387,7 +458,31 @@ func (p *Parser) unary() expression.Expression {
 		rhs := p.unary()
 		return expression.NewUnaryExpression(op, rhs)
 	}
-	return p.primary()
+	return p.call()
+}
+
+func (p *Parser) call() expression.Expression {
+	callee := p.primary()
+	if p.match(token.LEFT_PAREN) {
+		args := []expression.Expression{}
+		if !p.check(token.RIGHT_PAREN) {
+			for {
+				args = append(args, p.expression())
+				if !p.match(token.COMMA) {
+					break
+				}
+			}
+		}
+		if len(args) > 255 {
+			p.onError(NewParserError(p.peek(), "Can't have more than 255 arguments."))
+		}
+		rightParan, err := p.consume(token.RIGHT_PAREN, "Expect ')' after arguments.")
+		if err != nil {
+			return nil
+		}
+		callee = expression.NewFunctionCallExpression(callee, args, rightParan)
+	}
+	return callee
 }
 
 func (p *Parser) primary() expression.Expression {

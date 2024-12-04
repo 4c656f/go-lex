@@ -394,3 +394,172 @@ func TestForStmt(t *testing.T) {
 		t.Errorf("TestParser Error, got: %s, want: %s", res, expected)
 	}
 }
+
+func TestNativeTimeFunctionStmt(t *testing.T) {
+	// mock stdout
+	rescueStdout := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	lex := lexer.New(`
+		print clock();
+	`)
+	lex.Lex()
+	tokens := lex.Tokens()
+	p := parser.New(tokens)
+	program, errs := p.ParseProgram()
+	if errs != nil {
+		t.Errorf("TestInterpreter non nil error %s", errs)
+		return
+	}
+	interpreter := New()
+	_, errs = interpreter.Interp(program)
+	// demock stdout
+	w.Close()
+	out, _ := io.ReadAll(r)
+	os.Stdout = rescueStdout
+	res := string(out)
+	fmt.Println(errs, parser.NewAstPrinter().PrintProgram(program))
+	if len(res) < 5 {
+		t.Errorf("TestParser Error, got: %s, want: %v", res, 5)
+	}
+}
+
+func TestFunctionDeclarationStmt(t *testing.T) {
+
+	lex := lexer.New(`
+		fun foo(){
+		
+		}
+	`)
+	lex.Lex()
+	tokens := lex.Tokens()
+	p := parser.New(tokens)
+	program, errs := p.ParseProgram()
+	if errs != nil {
+		t.Errorf("TestInterpreter non nil error %s", errs)
+		return
+	}
+	interpreter := New()
+	_, errs = interpreter.Interp(program)
+}
+
+func TestReturnStmt(t *testing.T) {
+	// mock stdout
+	rescueStdout := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	lex := lexer.New(`
+		fun foo(variable){
+			print variable;
+			var i = 0;
+			while (true) {
+				if (i >= 4){
+					return i;
+				}
+				i = i + 1;
+			}
+		}
+		print foo(10);
+	`)
+	lex.Lex()
+	tokens := lex.Tokens()
+	p := parser.New(tokens)
+	program, errs := p.ParseProgram()
+	if errs != nil {
+		t.Errorf("TestInterpreter non nil error %s", errs)
+		return
+	}
+	interpreter := New()
+	_, errs = interpreter.Interp(program)
+	// demock stdout
+	w.Close()
+	out, _ := io.ReadAll(r)
+	os.Stdout = rescueStdout
+	res := string(out)
+	fmt.Println(errs, parser.NewAstPrinter().PrintProgram(program))
+	expected := "10\n4\n"
+	if res != expected {
+		t.Errorf("TestParser Error, got: %s, want: %s", res, expected)
+	}
+}
+
+func TestClosuresStmt(t *testing.T) {
+	// mock stdout
+	rescueStdout := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	lex := lexer.New(`
+		fun makeCounter() {
+		  var i = 0;
+		  fun count() {
+		    i = i + 1;
+		    print i;
+		  }
+		
+		  return count;
+		}
+		var counter = makeCounter();
+		counter();
+		counter();
+		counter();
+	`)
+	lex.Lex()
+	tokens := lex.Tokens()
+	p := parser.New(tokens)
+	program, errs := p.ParseProgram()
+	if errs != nil {
+		t.Errorf("TestInterpreter non nil error %s", errs)
+		return
+	}
+	interpreter := New()
+	_, errs = interpreter.Interp(program)
+	// demock stdout
+	w.Close()
+	out, _ := io.ReadAll(r)
+	os.Stdout = rescueStdout
+	res := string(out)
+	fmt.Println(errs, parser.NewAstPrinter().PrintProgram(program))
+	expected := "1\n2\n3\n"
+	if res != expected {
+		t.Errorf("TestParser Error, got: %s, want: %s", res, expected)
+	}
+}
+
+func TestFibStmt(t *testing.T) {
+	// mock stdout
+	rescueStdout := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	lex := lexer.New(`
+		fun fib(n) {
+			if (n <= 1) return n;
+			return fib(n - 2) + fib(n - 1);
+		}
+
+		print fib(10);
+	`)
+	lex.Lex()
+	tokens := lex.Tokens()
+	p := parser.New(tokens)
+	program, errs := p.ParseProgram()
+	if errs != nil {
+		t.Errorf("TestInterpreter non nil error %s", errs)
+		return
+	}
+	interpreter := New()
+	_, errs = interpreter.Interp(program)
+	// demock stdout
+	w.Close()
+	out, _ := io.ReadAll(r)
+	os.Stdout = rescueStdout
+	res := string(out)
+	fmt.Println(errs, parser.NewAstPrinter().PrintProgram(program))
+	expected := "55\n"
+	if res != expected {
+		t.Errorf("TestParser Error, got: %s, want: %s", res, expected)
+	}
+}

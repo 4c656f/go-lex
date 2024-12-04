@@ -16,6 +16,8 @@ type Visitor interface {
 	VisitBlockStmt(s *BlockStmt)
 	VisitIfStmt(s *IfStmt)
 	VisitWhileStmt(s *WhileStmt)
+	VisitFunctionDeclarationStmt(s *FunctionDeclarationStmt)
+	VisitReturnStmt(s *ReturnStmt)
 }
 
 type ExpressionStmt struct {
@@ -46,6 +48,17 @@ type WhileStmt struct {
 	Body      Stmt
 }
 
+type FunctionDeclarationStmt struct {
+	Name *token.Token
+	Args []*token.Token
+	Body []Stmt
+}
+
+type ReturnStmt struct {
+	Keywoard *token.Token
+	Exp expression.Expression
+}
+
 func (s *WhileStmt) Accept(v Visitor) {
 	v.VisitWhileStmt(s)
 }
@@ -68,6 +81,14 @@ func (s *VarStmt) Accept(v Visitor) {
 
 func (s *IfStmt) Accept(v Visitor) {
 	v.VisitIfStmt(s)
+}
+
+func (s *ReturnStmt) Accept(v Visitor) {
+	v.VisitReturnStmt(s)
+}
+
+func (s *FunctionDeclarationStmt) Accept(v Visitor) {
+	v.VisitFunctionDeclarationStmt(s)
 }
 
 func NewExpressionStmt(exp expression.Expression) *ExpressionStmt {
@@ -109,5 +130,20 @@ func NewWhileStmt(condition expression.Expression, body Stmt) *WhileStmt {
 	return &WhileStmt{
 		Condition: condition,
 		Body:      body,
+	}
+}
+
+func NewFunctionDeclarationStmt(name *token.Token, body []Stmt, args []*token.Token) *FunctionDeclarationStmt {
+	return &FunctionDeclarationStmt{
+		Name: name,
+		Body: body,
+		Args: args,
+	}
+}
+
+func NewReturnStmt(keywoard *token.Token, exp expression.Expression) *ReturnStmt {
+	return &ReturnStmt{
+		Keywoard: keywoard,
+		Exp: exp,
 	}
 }

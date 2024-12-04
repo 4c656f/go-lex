@@ -10,6 +10,7 @@ type Visitor interface {
 	VisitVarExpression(u *VarExpression)
 	VisitAssignmentExpression(u *AssignmentExpression)
 	VisitLogicalExpression(u *LogicalExpression)
+	VisitFunctionCallExpression(u *FunctionCallExpression)
 }
 
 type Expression interface {
@@ -48,6 +49,16 @@ type LogicalExpression struct {
 	Lhs Expression
 	Op  *token.Token
 	Rhs Expression
+}
+
+type FunctionCallExpression struct {
+	Callee      Expression
+	Args       []Expression
+	RightParan *token.Token
+}
+
+func (this *FunctionCallExpression) Accept(v Visitor) {
+    v.VisitFunctionCallExpression(this)
 }
 
 func (this *BinaryExpression) Accept(v Visitor) {
@@ -136,4 +147,16 @@ func NewLogicalExpression(
 		Op:  op,
 		Rhs: rhs,
 	}
+}
+
+func NewFunctionCallExpression(
+    callee Expression,
+    args []Expression,
+    rightParan *token.Token,
+) *FunctionCallExpression {
+    return &FunctionCallExpression{
+        Callee:      callee,
+        Args:       args,
+        RightParan: rightParan,
+    }
 }
