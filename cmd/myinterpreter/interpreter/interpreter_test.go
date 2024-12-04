@@ -535,12 +535,18 @@ func TestFibStmt(t *testing.T) {
 	os.Stdout = w
 
 	lex := lexer.New(`
-		fun fib(n) {
-			if (n <= 1) return n;
-			return fib(n - 2) + fib(n - 1);
+		fun returnArg(arg) {
+			return arg;
 		}
-
-		print fib(10);
+		
+		fun returnFunCallWithArg(func, arg) {
+			return returnArg(func)(arg);
+		}
+		
+		fun printArg(arg) {
+		print arg;
+		}
+		
 	`)
 	lex.Lex()
 	tokens := lex.Tokens()

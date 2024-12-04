@@ -463,7 +463,7 @@ func (p *Parser) unary() expression.Expression {
 
 func (p *Parser) call() expression.Expression {
 	callee := p.primary()
-	if p.match(token.LEFT_PAREN) {
+	for p.match(token.LEFT_PAREN) {
 		args := []expression.Expression{}
 		if !p.check(token.RIGHT_PAREN) {
 			for {
